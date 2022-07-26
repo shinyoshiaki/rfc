@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>draft-alvestrand-rmcat-remb-03 - RTCP message for Receiver Estimated Maximum Bitrate 日本語訳</title>
+
+      <link rel="shortcut icon" type="image/x-icon"
+    href="https://tex2e.github.io/rfc-translater/favicon.ico" />
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+  <link rel="stylesheet" href="master.css">
+  <script src="index.js"></script>
+
+  <script>
+    var host = window.location.hostname;
+    if (host != "localhost") {
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-75892425-1', 'auto');
+      ga('send', 'pageview');
+    }
+  </script>
+
+  </head>
+  <body>
+      <nav class="navbar navbar-expand navbar-light bg-light">
+    <a class="navbar-brand" href="index.html">RFC Trans</a>
+    <div class="collapse navbar-collapse" id="navbarText">
+      <div class="navbar-nav mr-auto">
+        <a class="nav-item nav-link" href="privacy-policy.html">Privacy Policy</a>
+        <a class="nav-item nav-link" href="contact.html">Contact</a>
+        <a class="nav-item nav-link" href="../figs/html/index.html">Figs</a>
+      </div>
+      <div class="navbar-nav ml-auto">
+        <span class="navbar-text"><small>@tex2e</small></span>
+      </div>
+    </div>
+  </nav>
+
+    <span id="rfc_number" class="hidden">https://tools.ietf.org/html/draft-alvestrand-rmcat-remb-03</span>
+    <div style="height: 1ex;"></div>
+    <div style="float: right; position: sticky; top: 0;">
+      <button type="button" class="btn btn-light btn-sm">
+        <a href="https://tools.ietf.org/html/rfchttps://tools.ietf.org/html/draft-alvestrand-rmcat-remb-03">Orig</a>
+      </button>
+    </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">draft-alvestrand-rmcat-remb-03 - RTCP message for Receiver Estimated Maximum Bitrate 日本語訳</h4>
+            <span class="URL"
+              >URL :
+              <a href="https://tools.ietf.org/html/rfchttps://tools.ietf.org/html/draft-alvestrand-rmcat-remb-03">
+                https://tools.ietf.org/html/rfchttps://tools.ietf.org/html/draft-alvestrand-rmcat-remb-03
+              </a> </span
+            ><br />
+            <span class="title_ja">
+              タイトル : <strong>draft-alvestrand-rmcat-remb-03 - RTCP message for Receiver Estimated Maximum Bitrate</strong></span
+            ><br />
+            <span class="updated_by">翻訳編集 : 自動生成</span
+            ><br />
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+Network Working Group                                 H. Alvestrand, Ed.
+Internet-Draft                                                    Google
+Intended status: Experimental                           October 21, 2013
+Expires: April 24, 2014
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-10">
+            RTCP message for Receiver Estimated Maximum Bitrate draft-alvestrand-rmcat-remb-03
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Abstract
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document proposes an RTCP message for use in experimentally-deployed congestion control algorithms for RTP-based media flows.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            It also describes an absolute-value timestamp option for use in bandwidth estimatoin.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Requirements Language
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The key words &#34;MUST&#34;, &#34;MUST NOT&#34;, &#34;REQUIRED&#34;, &#34;SHALL&#34;, &#34;SHALL NOT&#34;, &#34;SHOULD&#34;, &#34;SHOULD NOT&#34;, &#34;RECOMMENDED&#34;, &#34;MAY&#34;, and &#34;OPTIONAL&#34; in this document are to be interpreted as described in RFC 2119 [RFC2119].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Status of this Memo
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Internet-Drafts are working documents of the Internet Engineering Task Force (IETF). Note that other groups may also distribute working documents as Internet-Drafts. The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time. It is inappropriate to use Internet-Drafts as reference material or to cite them other than as &#34;work in progress.&#34;
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This Internet-Draft will expire on April 24, 2014.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Copyright Notice
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Copyright (c) 2013 IETF Trust and the persons identified as the document authors. All rights reserved.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   This document is subject to BCP 78 and the IETF Trust&#39;s Legal
+   Provisions Relating to IETF Documents
+   (http://trustee.ietf.org/license-info) in effect on the date of
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            publication of this document. Please review these documents carefully, as they describe your rights and restrictions with respect to this document. Code Components extracted from this document must include Simplified BSD License text as described in Section 4.e of the Trust Legal Provisions and are provided without warranty as described in the Simplified BSD License.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Table of Contents
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . . . 3
+   2.  Receiver Estimated Max Bitrate (REMB) . . . . . . . . . . . . . 3
+     2.1.  Semantics . . . . . . . . . . . . . . . . . . . . . . . . . 3
+     2.2.  Message format  . . . . . . . . . . . . . . . . . . . . . . 3
+     2.3.  Signaling of use of this extension  . . . . . . . . . . . . 5
+   3.  Absolute Send Time  . . . . . . . . . . . . . . . . . . . . . . 5
+   4.  IANA considerations . . . . . . . . . . . . . . . . . . . . . . 6
+   5.  Security Considerations . . . . . . . . . . . . . . . . . . . . 6
+   6.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . . . 6
+   7.  References  . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+     7.1.  Normative References  . . . . . . . . . . . . . . . . . . . 7
+     7.2.  Informative References  . . . . . . . . . . . . . . . . . . 7
+   Appendix A.  Change log . . . . . . . . . . . . . . . . . . . . . . 7
+     A.1.  From appendix of -congestion-01 to -00  . . . . . . . . . . 7
+     A.2.  From -00 to -02 . . . . . . . . . . . . . . . . . . . . . . 7
+     A.3.  From -02 to -03 . . . . . . . . . . . . . . . . . . . . . . 8
+   Author&#39;s Address  . . . . . . . . . . . . . . . . . . . . . . . . . 8
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            1. Introduction
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document proposes an RTCP feedback message signalling the estimated total available bandwidth for a session.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If this function is available, it is possible to implement the algorithm in [I-D.alvestrand-rtcweb-congestion], or other algorithms with the same kind of feedback messaging need, in a fashion that covers multiple RTP streams at once.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            2. Receiver Estimated Max Bitrate (REMB)
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            2.1. Semantics
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This feedback message is used to notify a sender of multiple media streams over the same RTP session of the total estimated available bit rate on the path to the receiving side of this RTP session.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Within the common packet header for feedback messages (as defined in section 6.1 of [RFC4585]), the &#34;SSRC of packet sender&#34; field indicates the source of the notification. The &#34;SSRC of media source&#34; is not used and SHALL be set to 0. This usage of the value zero is also done in other RFCs.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The reception of a REMB message by a media sender conforming to this specification SHALL result in the total bit rate sent on the RTP session this message applies to being equal to or lower than the bit rate in this message. The new bit rate constraint should be applied as fast as reasonable. The sender is free to apply additional bandwidth restrictions based on its own restrictions and estimates.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            2.2. Message format
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document describes a message using the application specific payload type. This is suitable for experimentation; upon standardization, a specific type can be assigned for the purpose.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The message is an RTCP message with payload type 206. RFC 3550 [RFC3550] defines the range, RFC 4585 defines the specific PT value 206 and the FMT value 15.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |V=2|P| FMT=15  |   PT=206      |             length            |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                  SSRC of packet sender                        |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                  SSRC of media source                         |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |  Unique identifier &#39;R&#39; &#39;E&#39; &#39;M&#39; &#39;B&#39;                            |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |  Num SSRC     | BR Exp    |  BR Mantissa                      |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |   SSRC feedback                                               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |  ...                                                          |
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The fields V, P, SSRC, and length are defined in the RTP specification [2], the respective meaning being summarized below:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            version (V): (2 bits): This field identifies the RTP version. The current version is 2.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            padding (P) (1 bit): If set, the padding bit indicates that the packet contains additional padding octets at the end that are not part of the control information but are included in the length field. Always 0.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Feedback message type (FMT) (5 bits): This field identifies the type of the FB message and is interpreted relative to the type (transport layer, payload- specific, or application layer feedback). Always 15, application layer feedback message. RFC 4585 section 6.4.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Payload type (PT) (8 bits): This is the RTCP packet type that identifies the packet as being an RTCP FB message. Always PSFB (206), Payload-specific FB message. RFC 4585 section 6.4.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Length (16 bits): The length of this packet in 32-bit words minus one, including the header and any padding. This is in line with the definition of the length field used in RTCP sender and receiver reports [3]. RFC 4585 section 6.4.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            SSRC of packet sender (32 bits): The synchronization source identifier for the originator of this packet. RFC 4585 section 6.4.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            SSRC of media source (32 bits): Always 0; this is the same convention as in [RFC5104] section 4.2.2.2 (TMMBN).
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Unique identifier (32 bits): Always &#39;R&#39; &#39;E&#39; &#39;M&#39; &#39;B&#39; (4 ASCII characters).
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Num SSRC (8 bits): Number of SSRCs in this message.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            BR Exp (6 bits): The exponential scaling of the mantissa for the maximum total media bit rate value, ignoring all packet overhead. The value is an unsigned integer [0..63], as in RFC 5104 section 4.2.2.1.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            BR Mantissa (18 bits): The mantissa of the maximum total media bit rate (ignoring all packet overhead) that the sender of the REMB estimates. The BR is the estimate of the traveled path for the SSRCs reported in this message. The value is an unsigned integer in number of bits per second.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            SSRC feedback (32 bits) Consists of one or more SSRC entries which this feedback message applies to.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            2.3. Signaling of use of this extension
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            We negotiate use of the message in SDP using a header extension according to RFC 4585 section 4.2, with the value &#34;goog-remb&#34;:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   a=rtcp-fb:&lt;payload type&gt; goog-remb
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            3. Absolute Send Time
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Google has found that there are issues with relative send time offset when packets are relayed at nodes that are not the source of the RTP clock; it is hard to generate accurate offsets when you have to regenerate the base clock from the incoming packets before you can figure out what time to match; also, using signals from multiple flows becomes impossible unless the timestamps come from a common clock.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The Absolute Send Time extension is used to stamp RTP packets with a timestamp showing the departure time from the system that put this packet on the wire (or as close to this as we can manage).
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o Name: &#34;Absolute Sender Time&#34; ; &#34;RTP Header Extension for Absolute Sender Time&#34;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o Formal name: &#34;http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time&#34;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o Wire format: 1-byte extension, 3 bytes of data. total 4 bytes extra per packet (plus shared 4 bytes for all extensions present: 2 byte magic word 0xBEDE, 2 byte # of extensions).
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o Encoding: Timestamp is in seconds, 24 bit 6.18 fixed point, yielding 64s wraparound and 3.8us resolution (one increment for each 477 bytes going out on a 1Gbps interface).
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o Relation to NTP timestamps: abs_send_time_24 = (ntp_timestamp_64 &gt;&gt; 14) &amp; 0x00ffffff ; NTP timestamp is the number of seconds since the epoch, in 32.32 bit fixed point format.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o Notes: Packets are time stamped when going out, preferably close to metal. Intermediate RTP relays (RTP entities possibly altering the relative timing of packets in the stream) should remove the extension or overwrite its value with its own timestamp.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            When signalled in SDP, the standard mechanism for RTCP extensions [RFC5285] is used:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   a=extmap:3 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            4. IANA considerations
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Upon publication of this document as an RFC (if it is decided to publish it), IANA is requested to register the string &#34;goog-remb&#34; in its registry of &#34;rtcp-fb&#34; values in the SDP attribute registry group.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            5. Security Considerations
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If the RTCP packet is not protected, it is possible to inject fake RTCP packets that can increase or decrease bandwidth. This is not different from security considerations for any other RTCP message.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            6. Acknowledgements
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This proposal has emerged from discussions between, among others, Justin Uberti, Magnus Flodman, Patrik Westin, Stefan Holmer and Henrik Lundin.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            7. References
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            7.1. Normative References
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC2119] Bradner, S., &#34;Key words for use in RFCs to Indicate Requirement Levels&#34;, BCP 14, RFC 2119, March 1997.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC3550] Schulzrinne, H., Casner, S., Frederick, R., and V. Jacobson, &#34;RTP: A Transport Protocol for Real-Time Applications&#34;, STD 64, RFC 3550, July 2003.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC4585] Ott, J., Wenger, S., Sato, N., Burmeister, C., and J. Rey, &#34;Extended RTP Profile for Real-time Transport Control Protocol (RTCP)-Based Feedback (RTP/AVPF)&#34;, RFC 4585, July 2006.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC5104] Wenger, S., Chandra, U., Westerlund, M., and B. Burman, &#34;Codec Control Messages in the RTP Audio-Visual Profile with Feedback (AVPF)&#34;, RFC 5104, February 2008.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC5285] Singer, D. and H. Desineni, &#34;A General Mechanism for RTP Header Extensions&#34;, RFC 5285, July 2008.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            7.2. Informative References
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [I-D.alvestrand-rtcweb-congestion] Holmer, S. and H. Alvestrand, &#34;A Google Congestion Control Algorithm for Real-Time Communication on the World Wide Web&#34;, draft-alvestrand-rtcweb-congestion-03 (work in progress), October 2012.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC5450] Singer, D. and H. Desineni, &#34;Transmission Time Offsets in RTP Streams&#34;, RFC 5450, March 2009.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            Appendix A. Change log
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            A.1. From appendix of -congestion-01 to -00
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The timestamp option was removed. Discussion concluded that the RFC 5450 [RFC5450] &#34;transmission time offset&#34; header likely gives accurate enough send-time information for our purposes.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            A.2. From -00 to -02
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            No changes. These are &#34;keepalive&#34; publications.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            A.3. From -02 to -03
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Added information on the absolute-timestamp extension and on SDP negotiation of REMB.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Author&#39;s Address
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Harald Alvestrand (editor) Google Kungsbron 2 Stockholm, 11122 Sweden
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   Email: harald@alvestrand.no
+        </pre
+          >
+        </div>
+
+      </div>
+    </div>
+    <div id="rfc_footer"></div>
+  </body>
+</html>

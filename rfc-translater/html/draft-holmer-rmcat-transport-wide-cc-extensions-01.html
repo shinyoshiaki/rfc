@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>draft-holmer-rmcat-transport-wide-cc-extensions-01 - RTP Extensions for Transport-wide Congestion Control 日本語訳</title>
+
+      <link rel="shortcut icon" type="image/x-icon"
+    href="https://tex2e.github.io/rfc-translater/favicon.ico" />
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+  <link rel="stylesheet" href="master.css">
+  <script src="index.js"></script>
+
+  <script>
+    var host = window.location.hostname;
+    if (host != "localhost") {
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-75892425-1', 'auto');
+      ga('send', 'pageview');
+    }
+  </script>
+
+  </head>
+  <body>
+      <nav class="navbar navbar-expand navbar-light bg-light">
+    <a class="navbar-brand" href="index.html">RFC Trans</a>
+    <div class="collapse navbar-collapse" id="navbarText">
+      <div class="navbar-nav mr-auto">
+        <a class="nav-item nav-link" href="privacy-policy.html">Privacy Policy</a>
+        <a class="nav-item nav-link" href="contact.html">Contact</a>
+        <a class="nav-item nav-link" href="../figs/html/index.html">Figs</a>
+      </div>
+      <div class="navbar-nav ml-auto">
+        <span class="navbar-text"><small>@tex2e</small></span>
+      </div>
+    </div>
+  </nav>
+
+    <span id="rfc_number" class="hidden">https://tools.ietf.org/html/draft-holmer-rmcat-transport-wide-cc-extensions-01</span>
+    <div style="height: 1ex;"></div>
+    <div style="float: right; position: sticky; top: 0;">
+      <button type="button" class="btn btn-light btn-sm">
+        <a href="https://tools.ietf.org/html/rfchttps://tools.ietf.org/html/draft-holmer-rmcat-transport-wide-cc-extensions-01">Orig</a>
+      </button>
+    </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">draft-holmer-rmcat-transport-wide-cc-extensions-01 - RTP Extensions for Transport-wide Congestion Control 日本語訳</h4>
+            <span class="URL"
+              >URL :
+              <a href="https://tools.ietf.org/html/rfchttps://tools.ietf.org/html/draft-holmer-rmcat-transport-wide-cc-extensions-01">
+                https://tools.ietf.org/html/rfchttps://tools.ietf.org/html/draft-holmer-rmcat-transport-wide-cc-extensions-01
+              </a> </span
+            ><br />
+            <span class="title_ja">
+              タイトル : <strong>draft-holmer-rmcat-transport-wide-cc-extensions-01 - RTP Extensions for Transport-wide Congestion Control</strong></span
+            ><br />
+            <span class="updated_by">翻訳編集 : 自動生成</span
+            ><br />
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+Network Working Group                                          S. Holmer
+Internet-Draft                                                M. Flodman
+Intended status: Experimental                                  E. Sprang
+Expires: April 21, 2016                                           Google
+                                                        October 19, 2015
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-10">
+            RTP Extensions for Transport-wide Congestion Control draft-holmer-rmcat-transport-wide-cc-extensions-01
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Abstract
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document proposes an RTP header extension and an RTCP message for use in congestion control algorithms for RTP-based media flows. It adds transport-wide packet sequence numbers and corresponding feedback message so that congestion control can be performed on a transport level at the send-side, while keeping the receiver dumb.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Requirements Language
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The key words &#34;MUST&#34;, &#34;MUST NOT&#34;, &#34;REQUIRED&#34;, &#34;SHALL&#34;, &#34;SHALL NOT&#34;, &#34;SHOULD&#34;, &#34;SHOULD NOT&#34;, &#34;RECOMMENDED&#34;, &#34;MAY&#34;, and &#34;OPTIONAL&#34; in this document are to be interpreted as described in RFC 2119 [RFC2119].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Status of This Memo
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Internet-Drafts are working documents of the Internet Engineering Task Force (IETF). Note that other groups may also distribute working documents as Internet-Drafts. The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time. It is inappropriate to use Internet-Drafts as reference material or to cite them other than as &#34;work in progress.&#34;
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This Internet-Draft will expire on April 21, 2016.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Copyright Notice
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Copyright (c) 2015 IETF Trust and the persons identified as the document authors. All rights reserved.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document is subject to BCP 78 and the IETF Trust&#39;s Legal Provisions Relating to IETF Documents (http://trustee.ietf.org/license-info) in effect on the date of publication of this document. Please review these documents carefully, as they describe your rights and restrictions with respect to this document. Code Components extracted from this document must include Simplified BSD License text as described in Section 4.e of the Trust Legal Provisions and are provided without warranty as described in the Simplified BSD License.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Table of Contents
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
+   2.  Transport-wide Sequence Number  . . . . . . . . . . . . . . .   3
+     2.1.  Semantics . . . . . . . . . . . . . . . . . . . . . . . .   3
+     2.2.  RTP header extension format . . . . . . . . . . . . . . .   3
+     2.3.  Signaling of use of this extension  . . . . . . . . . . .   3
+   3.  Transport-wide RTCP Feedback Message  . . . . . . . . . . . .   4
+     3.1.  Message format  . . . . . . . . . . . . . . . . . . . . .   4
+       3.1.1.  Packet Status Symbols . . . . . . . . . . . . . . . .   6
+       3.1.2.  Packet Status Chunks  . . . . . . . . . . . . . . . .   7
+       3.1.3.  Run Length Chunk  . . . . . . . . . . . . . . . . . .   7
+       3.1.4.  Status Vector Chunk . . . . . . . . . . . . . . . . .   8
+       3.1.5.  Receive Delta . . . . . . . . . . . . . . . . . . . .   9
+   4.  Overhead discussion . . . . . . . . . . . . . . . . . . . . .  10
+   5.  IANA considerations . . . . . . . . . . . . . . . . . . . . .  10
+   6.  Security Considerations . . . . . . . . . . . . . . . . . . .  10
+   7.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  10
+   8.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  10
+     8.1.  Normative References  . . . . . . . . . . . . . . . . . .  10
+     8.2.  Informative References  . . . . . . . . . . . . . . . . .  10
+   Appendix A.  Change log . . . . . . . . . . . . . . . . . . . . .  11
+     A.1.  First version . . . . . . . . . . . . . . . . . . . . . .  11
+   Authors&#39; Addresses  . . . . . . . . . . . . . . . . . . . . . . .  11
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            1. Introduction
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document proposes RTP header extension containing a transport-wide packet sequence number and an RTCP feedback message feeding back the arrival times and sequence numbers of the packets received on a connection.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Some of the benefits that these extensions bring are:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o The congestion control algorithms are easier to maintain and improve as there is less synchronization between sender and receiver versions needed. It should be possible to implement [I-D.ietf-rmcat-gcc], [I-D.ietf-rmcat-nada] and [I-D.ietf-rmcat-scream-cc] with the proposed protocol.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o More flexibility in what algorithms are used, as long as they are having most of their logic on the send-side. For instance different behavior can be used depending on if the rate produced is application limited or not.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            2. Transport-wide Sequence Number
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            2.1. Semantics
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This RTP header extension is added on the transport layer, and uses the same counter for all packets which are sent over the same connection (for instance as defined by bundle).
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The benefit with a transport-wide sequence numbers is two-fold:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o It is a better fit for congestion control as the congestion controller doesn&#39;t operate on media streams, but on packet flows.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o It allows for earlier packet loss detection (and recovery) since a loss in stream A can be detected when a packet from stream B is received, thus we don&#39;t have to wait until the next packet of stream A is received.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            2.2. RTP header extension format
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document describes a message using the application specific payload type. This is suitable for experimentation; upon standardization, a specific type can be assigned for the purpose.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+     0                   1                   2                   3
+      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |       0xBE    |    0xDE       |           length=1            |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |  ID   | L=1   |transport-wide sequence number | zero padding  |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            An RTP header extension with a 16 bits sequence number attached to all packets sent. This sequence number is incremented by 1 for each packet being sent over the same socket.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            2.3. Signaling of use of this extension
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            When signalled in SDP, the standard mechanism for RTP header extensions [RFC5285] is used:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   a=extmap:5 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-
+   cc-extensions
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            3. Transport-wide RTCP Feedback Message
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            To allow the most freedom possible to the sender, information about each packet delivered is needed. The simplest way of accomplishing that is to have the receiver send back a message containing an arrival timestamp and a packet identifier for each packet received. This way, the receiver is dumb and simply records arrival timestamps (A) of packets. The sender keeps a map of in-flight packets, and upon feedback arrival it looks up the on-wire timestamp (S) of the corresponding packet. From these two timestamps the sender can compute metrics such as:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o Inter-packet delay variation: d(i) = A(i) - S(i) - (A(i-1) - S(i-1))
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o Estimated queueing delay: q(i) = A(i) - S(i) - min{j=i-1..i-w}(A(j) - S(j))
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Since the sender gets feedback about each packet sent, it will be set to better assess the cost of sending bursts of packets compared to aiming at sending at a constant rate decided by the receiver.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Two down-sides with this approach are:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o It isn&#39;t possible to differentiate between lost feedback on the downlink and lost packets on the uplink.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o Increased feedback rate on the reverse direction.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            From a congestion control perspective, lost feedback messages are handled by ignoring packets which would have been reported as lost or received in the lost feedback messages. This behavior is similar to how a lost RTCP receiver report is handled.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            It is recommended that a feedback message is sent for every frame received, but in cases of low uplink bandwidth it is acceptable to send them less frequently, e.g., for instance once per RTT, to reduce the overhead.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            3.1. Message format
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The message is an RTCP message with payload type 206. RFC 3550 [RFC3550] defines the range, RFC 4585 [RFC3550] defines the specific PT value 206 and the FMT value 15.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |V=2|P|  FMT=15 |    PT=205     |           length              |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                     SSRC of packet sender                     |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                      SSRC of media source                     |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |      base sequence number     |      packet status count      |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                 reference time                | fb pkt. count |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |          packet chunk         |         packet chunk          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       .                                                               .
+       .                                                               .
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |         packet chunk          |  recv delta   |  recv delta   |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       .                                                               .
+       .                                                               .
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |           recv delta          |  recv delta   | zero padding  |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            version (V): 2 bits This field identifies the RTP version. The current version is 2.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            padding (P): 1 bit If set, the padding bit indicates that the packet contains additional padding octets at the end that are not part of the control information but are included in the length field.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            feedback message type (FMT): 5 bits This field identifies the type of the FB message. It must have the value 15.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            payload type (PT): 8 bits This is the RTCP packet type that identifies the packet as being an RTCP FB message. The value must be RTPFB = 205.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            SSRC of packet sender: 32 bits The synchronization source identifier for the originator of this packet.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            SSRC of media source: 32 bits The synchronization source identifier of the media source that this piece of feedback information is related to. TODO: This is transport wide, do we just pick any of the media source SSRCs?
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            base sequence number: 16 bits The transport-wide sequence number of the first packet in this feedback. This number is not necessarily increased for every feedback; in the case of reordering it may be decreased.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            packet status count: 16 bits The number of packets this feedback contains status for, starting with the packet identified by the base sequence number.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            reference time: 24 bits Signed integer indicating an absolute reference time in some (unknown) time base chosen by the sender of the feedback packets. The value is to be interpreted in multiples of 64ms. The first recv delta in this packet is relative to the reference time. The reference time makes it possible to calculate the delta between feedbacks even if some feedback packets are lost, since it always uses the same time base.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            feedback packet count: 8 bits A counter incremented by one for each feedback packet sent. Used to detect feedback packet losses.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            packet chunk: 16 bits A list of packet status chunks. These indicate the status of a number of packets starting with the one identified by base sequence number. See below for details.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            recv delta: 8 bits For each &#34;packet received&#34; status, in the packet status chunks, a receive delta block will follow. See details below.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            3.1.1. Packet Status Symbols
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The status of a packet is described using a 2-bit symbol:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            00 Packet not received
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            01 Packet received, small delta
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            10 Packet received, large or negative delta
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            11 [Reserved]
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Packets with status &#34;Packet not received&#34; should not necessarily be interpreted as lost. They might just not have arrived yet.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            For each packet received with a delta, to the previous received packet, within +/-8191.75ms, a receive delta block is appended to the feedback message.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Note: In the case the base sequence number is decreased, creating a window overlapping the previous feedback messages, the status for any packets previously reported as received must be marked as &#34;Packet not received&#34; and thus no delta included for that symbol.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            3.1.2. Packet Status Chunks
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Packet status is described in chunks, similar to a Loss RLE Report Block. The are two different kinds of chunks:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o Run length chunk
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o Status vector chunk
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            All chunk types are 16 bits in length. The first bit of the chunk identifies whether it is an RLE chunk or a vector chunk.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            3.1.3. Run Length Chunk
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            A run length chunk starts with 0 bit, followed by a packet status symbol and the run length of that symbol.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+       0                   1
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |T| S |       Run Length        |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            chunk type (T): 1 bit A zero identifies this as a run length chunk.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            packet status symbol (S): 2 bits The symbol repeated in this run. See above.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            run length (L): 13 bits An unsigned integer denoting the run length.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Example 1:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+       0                   1
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |0|0 0|0 0 0 0 0 1 1 0 1 1 1 0 1|
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This is a run of the &#34;packet not received&#34; status of length 221.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Example 2:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+       0                   1
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |0|1 1|0 0 0 0 0 0 0 0 1 1 0 0 0|
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This is a run of the &#34;packet received, w/o recv delta&#34; status of length 24.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            3.1.4. Status Vector Chunk
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            A status vector chunk starts with a 1 bit to identify it as a vector chunk, followed by a symbol size bit and then 7 or 14 symbols, depending on the size bit.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+        0                   1
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |T|S|       symbol list         |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            chunk type (T): 1 bit A one identifies this as a status vector chunk.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            symbol size (S): 1 bit A zero means this vector contains only &#34;packet received&#34; (0) and &#34;packet not received&#34; (1) symbols. This means we can compress each symbol to just one bit, 14 in total. A one means this vector contains the normal 2-bit symbols, 7 in total.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            symbol list: 14 bits A list of packet status symbols, 7 or 14 in total.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Example 1:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+        0                   1
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |1|0|0 1 1 1 1 1 0 0 0 1 1 1 0 0|
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This chunk contains, in order:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            1x &#34;packet not received&#34;
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            5x &#34;packet received&#34; 3x &#34;packet not received&#34;
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            3x &#34;packet received&#34;
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            2x &#34;packet not received&#34;
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Example 2:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+        0                   1
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |1|1|0 0 1 1 0 1 0 1 0 1 0 0 0 0|
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This chunk contains, in order:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            1x &#34;packet not received&#34;
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            1x &#34;packet received, w/o timestamp&#34;
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            3x &#34;packet received&#34;
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            2x &#34;packet not received&#34;
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            3.1.5. Receive Delta
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Deltas are represented as multiples of 250us:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o If the &#34;Packet received, small delta&#34; symbol has been appended to the status list, an 8-bit unsigned receive delta will be appended to recv delta list, representing a delta in the range [0, 63.75] ms.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o If the &#34;Packet received, large or negative delta&#34; symbol has been appended to the status list, a 16-bit signed receive delta will be appended to recv delta list, representing a delta in the range [-8192.0, 8191.75] ms.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o If the delta exceeds even the larger limits, a new feedback message must be used, where the 24-bit base receive delta can cover very large gaps.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Note that the first receive delta is relative to the reference time indicated by the base receive delta.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            TODO: Add examples.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The smaller receive delta upper bound of 63.75 ms means that this is only viable at about 1000/25.5 ~= 16 packets per second and above. With a packet size of 1200 bytes/packet that amounts to a bitrate of about 150 kbit/s.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The 0.25 ms resolution means that up to 4000 packets per second can be represented. With a 1200 bytes/packet payload, that amounts to 38.4 Mbit/s payload bandwidth.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            4. Overhead discussion
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            TODO: Examples of overhead in various scenarios.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            5. IANA considerations
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Upon publication of this document as an RFC (if it is decided to publish it), IANA is requested to register the string &#34;goog-remb&#34; in its registry of &#34;rtcp-fb&#34; values in the SDP attribute registry group.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            6. Security Considerations
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If the RTCP packet is not protected, it is possible to inject fake RTCP packets that can increase or decrease bandwidth. This is not different from security considerations for any other RTCP message.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            7. Acknowledgements
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            8. References
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            8.1. Normative References
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC2119] Bradner, S., &#34;Key words for use in RFCs to Indicate Requirement Levels&#34;, BCP 14, RFC 2119, March 1997.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC3550] Schulzrinne, H., Casner, S., Frederick, R., and V. Jacobson, &#34;RTP: A Transport Protocol for Real-Time Applications&#34;, STD 64, RFC 3550, July 2003.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC5285] Singer, D. and H. Desineni, &#34;A General Mechanism for RTP Header Extensions&#34;, RFC 5285, DOI 10.17487/RFC5285, July 2008, &lt;http://www.rfc-editor.org/info/rfc5285&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            8.2. Informative References
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [I-D.ietf-rmcat-gcc] Holmer, S., Marcon, J., Carlucci, G., Cicco, L., and S. Mascolo, &#34;A Google Congestion Control Algorithm for Real-Time Communication&#34;, draft-ietf-rmcat-gcc-00 (work in progress), September 2015.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [I-D.ietf-rmcat-nada] Zhu, X., Pan, R., Ramalho, M., Cruz, S., Jones, P., Fu, J., D&#39;Aronco, S., and C. Ganzhorn, &#34;NADA: A Unified Congestion Control Scheme for Real-Time Media&#34;, draft-ietf-rmcat-nada-01 (work in progress), October 2015.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [I-D.ietf-rmcat-scream-cc] Johansson, I. and Z. Sarker, &#34;Self-Clocked Rate Adaptation for Multimedia&#34;, draft-ietf-rmcat-scream-cc-01 (work in progress), July 2015.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            Appendix A. Change log
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            A.1. First version
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Authors&#39; Addresses
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Stefan Holmer Google Kungsbron 2 Stockholm 11122 Sweden
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   Email: holmer@google.com
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Magnus Flodman Google Kungsbron 2 Stockholm 11122 Sweden
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   Email: mflodman@google.com
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Erik Sprang Google Kungsbron 2 Stockholm 11122 Sweden
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   Email: sprang@google.com
+        </pre
+          >
+        </div>
+
+      </div>
+    </div>
+    <div id="rfc_footer"></div>
+  </body>
+</html>

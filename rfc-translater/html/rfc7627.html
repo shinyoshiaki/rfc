@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RFC 7627 - Transport Layer Security (TLS) Session Hash and Extended Master Secret Extension 日本語訳</title>
+
+      <link rel="shortcut icon" type="image/x-icon"
+    href="https://tex2e.github.io/rfc-translater/favicon.ico" />
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+  <link rel="stylesheet" href="master.css">
+  <script src="index.js"></script>
+
+  <script>
+    var host = window.location.hostname;
+    if (host != "localhost") {
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-75892425-1', 'auto');
+      ga('send', 'pageview');
+    }
+  </script>
+
+  </head>
+  <body>
+      <nav class="navbar navbar-expand navbar-light bg-light">
+    <a class="navbar-brand" href="index.html">RFC Trans</a>
+    <div class="collapse navbar-collapse" id="navbarText">
+      <div class="navbar-nav mr-auto">
+        <a class="nav-item nav-link" href="privacy-policy.html">Privacy Policy</a>
+        <a class="nav-item nav-link" href="contact.html">Contact</a>
+        <a class="nav-item nav-link" href="../figs/html/index.html">Figs</a>
+      </div>
+      <div class="navbar-nav ml-auto">
+        <span class="navbar-text"><small>@tex2e</small></span>
+      </div>
+    </div>
+  </nav>
+
+    <span id="rfc_number" class="hidden">7627</span>
+    <div style="height: 1ex;"></div>
+    <div style="float: right; position: sticky; top: 0;">
+      <button type="button" class="btn btn-light btn-sm">
+        <a href="https://tools.ietf.org/html/rfc7627">Orig</a>
+      </button>
+    </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">RFC 7627 - Transport Layer Security (TLS) Session Hash and Extended Master Secret Extension 日本語訳</h4>
+            <span class="URL"
+              >URL :
+              <a href="https://tools.ietf.org/html/rfc7627">
+                https://tools.ietf.org/html/rfc7627
+              </a> </span
+            ><br />
+            <span class="title_ja">
+              タイトル : <strong>RFC 7627 - Transport Layer Security (TLS) Session Hash and Extended Master Secret Extension</strong></span
+            ><br />
+            <span class="updated_by">翻訳編集 : 自動生成</span
+            ><br />
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+Internet Engineering Task Force (IETF)                 K. Bhargavan, Ed.
+Request for Comments: 7627                            A. Delignat-Lavaud
+Updates: 5246                                                 A. Pironti
+Category: Standards Track                       Inria Paris-Rocquencourt
+ISSN: 2070-1721                                               A. Langley
+                                                             Google Inc.
+                                                                  M. Ray
+                                                         Microsoft Corp.
+                                                          September 2015
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-12">
+            Transport Layer Security (TLS) Session Hash and Extended Master Secret Extension
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Abstract
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The Transport Layer Security (TLS) master secret is not cryptographically bound to important session parameters such as the server certificate. Consequently, it is possible for an active attacker to set up two sessions, one with a client and another with a server, such that the master secrets on the two sessions are the same. Thereafter, any mechanism that relies on the master secret for authentication, including session resumption, becomes vulnerable to a man-in-the-middle attack, where the attacker can simply forward messages back and forth between the client and server. This specification defines a TLS extension that contextually binds the master secret to a log of the full handshake that computes it, thus preventing such attacks.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Status of This Memo
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This is an Internet Standards Track document.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document is a product of the Internet Engineering Task Force (IETF). It represents the consensus of the IETF community. It has received public review and has been approved for publication by the Internet Engineering Steering Group (IESG). Further information on Internet Standards is available in Section 2 of RFC 5741.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Information about the current status of this document, any errata, and how to provide feedback on it may be obtained at http://www.rfc-editor.org/info/rfc7627.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Copyright Notice
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Copyright (c) 2015 IETF Trust and the persons identified as the document authors. All rights reserved.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document is subject to BCP 78 and the IETF Trust&#39;s Legal Provisions Relating to IETF Documents (http://trustee.ietf.org/license-info) in effect on the date of publication of this document. Please review these documents carefully, as they describe your rights and restrictions with respect to this document. Code Components extracted from this document must include Simplified BSD License text as described in Section 4.e of the Trust Legal Provisions and are provided without warranty as described in the Simplified BSD License.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Table of Contents
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   1. Introduction ....................................................3
+   2. Requirements Notation ...........................................5
+   3. The TLS Session Hash ............................................5
+   4. The Extended Master Secret ......................................6
+   5. Extension Negotiation ...........................................6
+      5.1. Extension Definition .......................................6
+      5.2. Client and Server Behavior: Full Handshake .................7
+      5.3. Client and Server Behavior: Abbreviated Handshake ..........7
+      5.4. Interoperability Considerations ............................9
+   6. Security Considerations .........................................9
+      6.1. Triple Handshake Preconditions and Impact ..................9
+      6.2. Cryptographic Properties of the Hash Function .............11
+      6.3. Handshake Messages Included in the Session Hash ...........11
+      6.4. No SSL 3.0 Support ........................................12
+   7. IANA Considerations ............................................12
+   8. References .....................................................12
+      8.1. Normative References ......................................12
+      8.2. Informative References ....................................13
+   Acknowledgments ...................................................14
+   Authors&#39; Addresses ................................................15
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            1. Introduction
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            In TLS [RFC5246], every session has a &#34;master_secret&#34; computed as:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   master_secret = PRF(pre_master_secret, &#34;master secret&#34;,
+                       ClientHello.random + ServerHello.random)
+                       [0..47];
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            where the &#34;pre_master_secret&#34; is the result of some key exchange protocol. For example, when the handshake uses an RSA ciphersuite, this value is generated uniformly at random by the client, whereas for Ephemeral Diffie-Hellman (DHE) ciphersuites, it is the result of a Diffie-Hellman key agreement.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            As described in [TRIPLE-HS], in both the RSA and DHE key exchanges, an active attacker can synchronize two TLS sessions so that they share the same &#34;master_secret&#34;. For an RSA key exchange where the client is unauthenticated, this is achieved as follows. Suppose a client C connects to a server A. C does not realize that A is malicious and that A connects in the background to an honest server S and completes both handshakes. For simplicity, assume that C and S only use RSA ciphersuites.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            1. C sends a &#34;ClientHello&#34; to A, and A forwards it to S.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            2. S sends a &#34;ServerHello&#34; to A, and A forwards it to C.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            3. S sends a &#34;Certificate&#34;, containing its certificate chain, to A. A replaces it with its own certificate chain and sends it to C.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            4. S sends a &#34;ServerHelloDone&#34; to A, and A forwards it to C.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            5. C sends a &#34;ClientKeyExchange&#34; to A, containing the &#34;pre_master_secret&#34;, encrypted with A&#39;s public key. A decrypts the &#34;pre_master_secret&#34;, re-encrypts it with S&#39;s public key, and sends it on to S.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            6. C sends a &#34;Finished&#34; to A. A computes a &#34;Finished&#34; for its connection with S and sends it to S.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            7. S sends a &#34;Finished&#34; to A. A computes a &#34;Finished&#34; for its connection with C and sends it to C.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            At this point, both connections (between C and A, and between A and S) have new sessions that share the same &#34;pre_master_secret&#34;, &#34;ClientHello.random&#34;, &#34;ServerHello.random&#34;, as well as other session parameters, including the session identifier and, optionally, the session ticket. Hence, the &#34;master_secret&#34; value will be equal for the two sessions and will be associated both at C and S with the same session ID, even though the server identities on the two connections are different. Recall that C only sees A&#39;s certificate and is unaware of A&#39;s connection with S. Moreover, the record keys on the two connections will also be the same.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The scenario above shows that TLS does not guarantee that the master secrets and keys used on different connections will be different. Even if client authentication is used, the scenario still works, except that the two sessions now differ on both client and server identities.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            A similar scenario can be achieved when the handshake uses a DHE ciphersuite. Note that even if the client or server does not prefer using RSA or DHE, the attacker can force them to use it by offering only RSA or DHE in its hello messages. Handshakes using Ephemeral Elliptic Curve Diffie-Hellman (ECDHE) ciphersuites are also vulnerable if they allow arbitrary explicit curves or use curves with small subgroups. Against more powerful adversaries, other key exchanges, such as Secure Remote Password (SRP) and Pre-Shared Key (PSK), have also been shown to be vulnerable [VERIFIED-BINDINGS].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Once A has synchronized the two connections, since the keys are the same on the two sides, it can step away and transparently forward messages between C and S, reading and modifying when it desires. In the key exchange literature, such occurrences are called unknown key-share attacks, since C and S share a secret but they both think that their secret is shared only with A. In themselves, these attacks do not break integrity or confidentiality between honest parties, but they offer a useful starting point from which to mount impersonation attacks on C and S.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Suppose C tries to resume its session on a new connection with A. A can then resume its session with S on a new connection and forward the abbreviated handshake messages unchanged between C and S. Since the abbreviated handshake only relies on the master secret for authentication and does not mention client or server identities, both handshakes complete successfully, resulting in the same session keys and the same handshake log. A still knows the connection keys and can send messages to both C and S.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Critically, at the new connection, even the handshake log is the same on C and S, thus defeating any man-in-the-middle protection scheme that relies on the uniqueness of finished messages, such as the secure renegotiation indication extension [RFC5746] or TLS channel bindings [RFC5929]. [TRIPLE-HS] describes several exploits based on such session synchronization attacks. In particular, it describes a man-in-the-middle attack, called the &#34;triple handshake&#34;, that circumvents the protections of [RFC5746] to break client-authenticated TLS renegotiation after session resumption. Similar attacks apply to application-level authentication mechanisms that rely on channel bindings [RFC5929] or on key material exported from TLS [RFC5705].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The underlying protocol issue leading to these attacks is that the TLS master secret is not guaranteed to be unique across sessions, since it is not context-bound to the full handshake that generated it. If we fix this problem in the initial master secret computation, then all these attacks can be prevented. This specification introduces a TLS extension that changes the way the &#34;master_secret&#34; value is computed in a full handshake by including the log of the handshake messages, so that different sessions will, by construction, have different master secrets. This prevents the attacks described in [TRIPLE-HS] and documented in Section 2.11 of [RFC7457].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            2. Requirements Notation
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document uses the same notation and terminology used in the TLS protocol specification [RFC5246].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The key words &#34;MUST&#34;, &#34;MUST NOT&#34;, &#34;REQUIRED&#34;, &#34;SHALL&#34;, &#34;SHALL NOT&#34;, &#34;SHOULD&#34;, &#34;SHOULD NOT&#34;, &#34;RECOMMENDED&#34;, &#34;NOT RECOMMENDED&#34;, &#34;MAY&#34;, and &#34;OPTIONAL&#34; in this document are to be interpreted as described in RFC 2119 [RFC2119].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            3. The TLS Session Hash
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            When a full TLS handshake takes place, we define
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+         session_hash = Hash(handshake_messages)
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            where &#34;handshake_messages&#34; refers to all handshake messages sent or received, starting at the ClientHello up to and including the ClientKeyExchange message, including the type and length fields of the handshake messages. This is the concatenation of all the exchanged Handshake structures, as defined in Section 7.4 of [RFC5246].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            For TLS 1.2, the &#34;Hash&#34; function is the one defined in Section 7.4.9 of [RFC5246] for the Finished message computation. For all previous versions of TLS, the &#34;Hash&#34; function computes the concatenation of MD5 and SHA1.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            There is no &#34;session_hash&#34; for resumed handshakes, as they do not lead to the creation of a new session.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            4. The Extended Master Secret
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            When the extended master secret extension is negotiated in a full handshake, the &#34;master_secret&#34; is computed as
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            master_secret = PRF(pre_master_secret, &#34;extended master secret&#34;, session_hash) [0..47];
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The extended master secret computation differs from that described in [RFC5246] in the following ways:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o The &#34;extended master secret&#34; label is used instead of &#34;master secret&#34;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o The &#34;session_hash&#34; is used instead of the &#34;ClientHello.random&#34; and &#34;ServerHello.random&#34;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The &#34;session_hash&#34; depends upon a handshake log that includes &#34;ClientHello.random&#34; and &#34;ServerHello.random&#34;, in addition to ciphersuites, key exchange information, and certificates (if any) from the client and server. Consequently, the extended master secret depends upon the choice of all these session parameters.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This design reflects the recommendation that keys should be bound to the security contexts that compute them [SP800-108]. The technique of mixing a hash of the key exchange messages into master key derivation is already used in other well-known protocols such as Secure Shell (SSH) [RFC4251].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Clients and servers SHOULD NOT accept handshakes that do not use the extended master secret, especially if they rely on features like compound authentication that fall into the vulnerable cases described in Section 6.1.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            5. Extension Negotiation
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            5.1. Extension Definition
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document defines a new TLS extension, &#34;extended_master_secret&#34; (with extension type 0x0017), which is used to signal both client and server to use the extended master secret computation. The &#34;extension_data&#34; field of this extension is empty. Thus, the entire encoding of the extension is 00 17 00 00 (in hexadecimal.)
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Although this document refers only to TLS, the extension proposed here can also be used with Datagram TLS (DTLS) [RFC6347].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If the client and server agree on this extension and a full handshake takes place, both client and server MUST use the extended master secret derivation algorithm, as defined in Section 4. All other cryptographic computations remain unchanged.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            5.2. Client and Server Behavior: Full Handshake
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            In the following, we use the phrase &#34;abort the handshake&#34; as shorthand for terminating the handshake by sending a fatal &#34;handshake_failure&#34; alert.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            In all handshakes, a client implementing this document MUST send the &#34;extended_master_secret&#34; extension in its ClientHello.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If a server implementing this document receives the &#34;extended_master_secret&#34; extension, it MUST include the extension in its ServerHello message.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If both the ClientHello and ServerHello contain the extension, the new session uses the extended master secret computation.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If the server receives a ClientHello without the extension, it SHOULD abort the handshake if it does not wish to interoperate with legacy clients. If it chooses to continue the handshake, then it MUST NOT include the extension in the ServerHello.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If a client receives a ServerHello without the extension, it SHOULD abort the handshake if it does not wish to interoperate with legacy servers.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If the client and server choose to continue a full handshake without the extension, they MUST use the standard master secret derivation for the new session. In this case, the new session is not protected by the mechanisms described in this document. So, implementers should follow the guidelines in Section 5.4 to avoid dangerous usage scenarios. In particular, the master secret derived from the new session should not be used for application-level authentication.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            5.3. Client and Server Behavior: Abbreviated Handshake
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The client SHOULD NOT offer an abbreviated handshake to resume a session that does not use an extended master secret. Instead, it SHOULD offer a full handshake.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If the client chooses to offer an abbreviated handshake even for such sessions in order to support legacy insecure resumption, then the current connection is not protected by the mechanisms in this document. So, the client should follow the guidelines in Section 5.4
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            to avoid dangerous usage scenarios. In particular, renegotiation is no longer secure on this connection, even if the client and server support the renegotiation indication extension [RFC5746].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            When offering an abbreviated handshake, the client MUST send the &#34;extended_master_secret&#34; extension in its ClientHello.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If a server receives a ClientHello for an abbreviated handshake offering to resume a known previous session, it behaves as follows:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o If the original session did not use the &#34;extended_master_secret&#34; extension but the new ClientHello contains the extension, then the server MUST NOT perform the abbreviated handshake. Instead, it SHOULD continue with a full handshake (as described in Section 5.2) to negotiate a new session.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o If the original session used the &#34;extended_master_secret&#34; extension but the new ClientHello does not contain it, the server MUST abort the abbreviated handshake.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o If neither the original session nor the new ClientHello uses the extension, the server SHOULD abort the handshake. If it continues with an abbreviated handshake in order to support legacy insecure resumption, the connection is no longer protected by the mechanisms in this document, and the server should follow the guidelines in Section 5.4.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o If the new ClientHello contains the extension and the server chooses to continue the handshake, then the server MUST include the &#34;extended_master_secret&#34; extension in its ServerHello message.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If a client receives a ServerHello that accepts an abbreviated handshake, it behaves as follows:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o If the original session did not use the &#34;extended_master_secret&#34; extension but the new ServerHello contains the extension, the client MUST abort the handshake.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o If the original session used the extension but the new ServerHello does not contain the extension, the client MUST abort the handshake.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If the client and server continue the abbreviated handshake, they derive the connection keys for the new session as usual from the master secret of the original session.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            5.4. Interoperability Considerations
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            To allow interoperability with legacy clients and servers, a TLS peer may decide to accept full handshakes that use the legacy master secret computation. If so, they need to differentiate between sessions that use legacy and extended master secrets by adding a flag to the session state.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If a client or server chooses to continue with a full handshake without the extended master secret extension, then the new session becomes vulnerable to the man-in-the-middle key synchronization attack described in Section 1. Hence, the client or server MUST NOT export any key material based on the new master secret for any subsequent application-level authentication. In particular, it MUST disable [RFC5705] and any Extensible Authentication Protocol (EAP) relying on compound authentication [COMPOUND-AUTH].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If a client or server chooses to continue an abbreviated handshake to resume a session that does not use the extended master secret, then the current connection becomes vulnerable to a man-in-the-middle handshake log synchronization attack as described in Section 1. Hence, the client or server MUST NOT use the current handshake&#39;s &#34;verify_data&#34; for application-level authentication. In particular, the client MUST disable renegotiation and any use of the &#34;tls-unique&#34; channel binding [RFC5929] on the current connection.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If the original session uses an extended master secret but the ClientHello or ServerHello in the abbreviated handshake does not include the extension, it MAY be safe to continue the abbreviated handshake since it is protected by the extended master secret of the original session. This scenario may occur, for example, when a server that implements this extension establishes a session but the session is subsequently resumed at a different server that does not support the extension. Since such situations are unusual and likely to be the result of transient or inadvertent misconfigurations, this document recommends that the client and server MUST abort such handshakes.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            6. Security Considerations
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            6.1. Triple Handshake Preconditions and Impact
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            One way to mount a triple handshake attack is described in Section 1, along with a mention of the security mechanisms that break due to the attack; more in-depth discussion and diagrams can be found in [TRIPLE-HS]. Here, some further discussion is presented about attack preconditions and impact.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            To mount a triple handshake attack, it must be possible to force the same master secret on two different sessions. For this to happen, two preconditions must be met:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o The client, C, must be willing to connect to a malicious server, A. In certain contexts, like the web, this can be easily achieved, since a browser can be instructed to load content from an untrusted origin.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o The pre-master secret must be synchronized on the two sessions. This is particularly easy to achieve with the RSA and DHE key exchanges, but under some conditions, ECDHE, SRP, and PSK key exchanges can be exploited to this effect as well.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Once the master secret is synchronized on two sessions, any security property that relies on the uniqueness of the master secret is compromised. For example, a TLS exporter [RFC5705] no longer provides a unique key bound to the current session.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            TLS session resumption also relies on the uniqueness of the master secret to authenticate the resuming peers. Hence, if a synchronized session is resumed, the peers cannot be sure about each other&#39;s identities, and the attacker knows the connection keys. Clearly, a precondition to this step of the attack is that both client and server support session resumption (either via session identifier or session tickets [RFC5077]).
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Additionally, in a synchronized abbreviated handshake, the whole transcript (which includes the &#34;verify_data&#34; values) is synchronized. So, after an abbreviated handshake, channel bindings like &#34;tls-unique&#34; [RFC5929] will not uniquely identify the connection anymore.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Synchronization of the &#34;verify_data&#34; in abbreviated handshakes also undermines the security guarantees of the renegotiation indication extension [RFC5746], re-enabling a prefix-injection flaw similar to the renegotiation attack [Ray09]. However, in a triple handshake attack, the client sees the server certificate changing across different full handshakes. Hence, a precondition to mount this stage of the attack is that the client accepts different certificates at each handshake, even if their common names do not match. Before the triple handshake attack was discovered, this used to be widespread behavior, at least among some web browsers; such browsers were hence vulnerable to the attack.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The extended master secret extension thwarts triple handshake attacks at their first stage by ensuring that different sessions necessarily end up with different master secret values. Hence, all security properties relying on the uniqueness of the master secret are now expected to hold. In particular, if a TLS session is protected by the extended master secret extension, it is safe to resume it, to use its channel bindings, and to allow for certificate changes across renegotiation, meaning that all certificates are controlled by the same peer. A symbolic cryptographic protocol analysis justifying the extended master secret extension appears in [VERIFIED-BINDINGS].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            6.2. Cryptographic Properties of the Hash Function
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The session hashes of two different sessions need to be distinct; hence, the &#34;Hash&#34; function used to compute the &#34;session_hash&#34; needs to be collision resistant. As such, hash functions such as MD5 or SHA1 are NOT RECOMMENDED.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            We observe that the &#34;Hash&#34; function used in the Finished message computation already needs to be collision resistant for the renegotiation indication extension [RFC5746] to work, because a meaningful collision on the handshake messages (and hence on the &#34;verify_data&#34;) may re-enable the renegotiation attack [Ray09].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The hash function used to compute the session hash depends on the TLS protocol version. All current ciphersuites defined for TLS 1.2 use SHA256 or better, and so does the session hash. For earlier versions of the protocol, only MD5 and SHA1 can be assumed to be supported, and this document does not require legacy implementations to add support for new hash functions. In these versions, the session hash uses the concatenation of MD5 and SHA1, as in the Finished message.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            6.3. Handshake Messages Included in the Session Hash
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The &#34;session_hash&#34; is intended to encompass all relevant session information, including ciphersuite negotiation, key exchange messages, and client and server identities. The hash is needed to compute the extended master secret and hence must be available before the Finished messages.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document sets the &#34;session_hash&#34; to cover all handshake messages up to and including the ClientKeyExchange. For existing TLS ciphersuites, these messages include all the significant contents of the new session -- CertificateVerify does not change the session content. At the same time, this allows the extended master secret to be computed immediately after the pre-master secret, so that implementations can shred the temporary pre-master secret from memory as early as possible.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            It is possible that new ciphersuites or TLS extensions may include additional messages between ClientKeyExchange and Finished that add important session context. In such cases, some of the security guarantees of this specification may no longer apply, and new man-in-the-middle attacks may be possible. For example, if the client and server support the session ticket extension [RFC5077], the session hash does not cover the new session ticket sent by the server. Hence, a man-in-the-middle may be able to cause a client to store a session ticket that was not meant for the current session. Attacks based on this vector are not yet known, but applications that store additional information in session tickets beyond those covered in the session hash require careful analysis.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            6.4. No SSL 3.0 Support
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The Secure Sockets Layer (SSL) protocol version 3.0 [RFC6101] is a predecessor of the TLS protocol, and it is equally vulnerable to triple handshake attacks, alongside other vulnerabilities stemming from its use of obsolete cryptographic constructions that are now considered weak. SSL 3.0 has been deprecated [RFC7568].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The countermeasure described in this document relies on a TLS extension and hence cannot be used with SSL 3.0. Clients and servers implementing this document SHOULD refuse SSL 3.0 handshakes. If they choose to support SSL 3.0, the resulting sessions MUST use the legacy master secret computation, and the interoperability considerations of Section 5.4 apply.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            7. IANA Considerations
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            IANA has added the extension code point 23 (0x0017), which has been used by prototype implementations, for the &#34;extended_master_secret&#34; extension to the &#34;ExtensionType Values&#34; registry specified in the TLS specification [RFC5246].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            8. References
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            8.1. Normative References
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC2119] Bradner, S., &#34;Key words for use in RFCs to Indicate Requirement Levels&#34;, BCP 14, RFC 2119, DOI 10.17487/RFC2119, March 1997, &lt;http://www.rfc-editor.org/info/rfc2119&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC5246] Dierks, T. and E. Rescorla, &#34;The Transport Layer Security (TLS) Protocol Version 1.2&#34;, RFC 5246, DOI 10.17487/RFC5246, August 2008, &lt;http://www.rfc-editor.org/info/rfc5246&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            8.2. Informative References
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [COMPOUND-AUTH] Asokan, N., Valtteri, N., and K. Nyberg, &#34;Man-in-the-Middle in Tunnelled Authentication Protocols&#34;, Security Protocols, LNCS, Volume 3364, DOI 10.1007/11542322_6, 2005.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [Ray09] Ray, M., &#34;Authentication Gap in TLS Renegotiation&#34;, 2009.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC4251] Ylonen, T. and C. Lonvick, Ed., &#34;The Secure Shell (SSH) Protocol Architecture&#34;, RFC 4251, DOI 10.17487/RFC4251, January 2006, &lt;http://www.rfc-editor.org/info/rfc4251&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC5077] Salowey, J., Zhou, H., Eronen, P., and H. Tschofenig, &#34;Transport Layer Security (TLS) Session Resumption without Server-Side State&#34;, RFC 5077, DOI 10.17487/RFC5077, January 2008, &lt;http://www.rfc-editor.org/info/rfc5077&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC5705] Rescorla, E., &#34;Keying Material Exporters for Transport Layer Security (TLS)&#34;, RFC 5705, DOI 10.17487/RFC5705, March 2010, &lt;http://www.rfc-editor.org/info/rfc5705&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC5746] Rescorla, E., Ray, M., Dispensa, S., and N. Oskov, &#34;Transport Layer Security (TLS) Renegotiation Indication Extension&#34;, RFC 5746, DOI 10.17487/RFC5746, February 2010, &lt;http://www.rfc-editor.org/info/rfc5746&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC5929] Altman, J., Williams, N., and L. Zhu, &#34;Channel Bindings for TLS&#34;, RFC 5929, DOI 10.17487/RFC5929, July 2010, &lt;http://www.rfc-editor.org/info/rfc5929&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC6101] Freier, A., Karlton, P., and P. Kocher, &#34;The Secure Sockets Layer (SSL) Protocol Version 3.0&#34;, RFC 6101, DOI 10.17487/RFC6101, August 2011, &lt;http://www.rfc-editor.org/info/rfc6101&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC6347] Rescorla, E. and N. Modadugu, &#34;Datagram Transport Layer Security Version 1.2&#34;, RFC 6347, DOI 10.17487/RFC6347, January 2012, &lt;http://www.rfc-editor.org/info/rfc6347&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC7457] Sheffer, Y., Holz, R., and P. Saint-Andre, &#34;Summarizing Known Attacks on Transport Layer Security (TLS) and Datagram TLS (DTLS)&#34;, RFC 7457, DOI 10.17487/RFC7457, February 2015, &lt;http://www.rfc-editor.org/info/rfc7457&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC7568] Barnes, R., Thomson, M., Pironti, A., and A. Langley, &#34;Deprecating Secure Sockets Layer Version 3.0&#34;, RFC 7568, DOI 10.17487/RFC7568, June 2015, &lt;http://www.rfc-editor.org/info/rfc7568&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [SP800-108] Chen, L., &#34;Recommendation for Key Derivation Using Pseudorandom Functions (Revised)&#34;, NIST Special Publication 800-108, 2009.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [TRIPLE-HS] Bhargavan, K., Delignat-Lavaud, A., Fournet, C., Pironti, A., and P-Y. Strub, &#34;Triple Handshakes and Cookie Cutters: Breaking and Fixing Authentication over TLS&#34;, IEEE Symposium on Security and Privacy, DOI 10.1109/SP.2014.14, 2014.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [VERIFIED-BINDINGS] Bhargavan, K., Delignat-Lavaud, A., and A. Pironti, &#34;Verified Contributive Channel Bindings for Compound Authentication&#34;, Network and Distributed System Security Symposium (NDSS), 2015.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Acknowledgments
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Triple handshake attacks were originally discovered by Antoine Delignat-Lavaud, Karthikeyan Bhargavan, and Alfredo Pironti. They were further developed by the miTLS team: Cedric Fournet, Pierre-Yves Strub, Markulf Kohlweiss, and Santiago Zanella-Beguelin. Many of the ideas in this document emerged from discussions with Martin Abadi, Ben Laurie, Nikos Mavrogiannopoulos, Manuel Pegourie-Gonnard, Eric Rescorla, Martin Rex, and Brian Smith.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Authors&#39; Addresses
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Karthikeyan Bhargavan (editor) Inria Paris-Rocquencourt 23, Avenue d&#39;Italie Paris 75214 CEDEX 13 France
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   Email: karthikeyan.bhargavan@inria.fr
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Antoine Delignat-Lavaud Inria Paris-Rocquencourt 23, Avenue d&#39;Italie Paris 75214 CEDEX 13 France
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   Email: antoine.delignat-lavaud@inria.fr
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Alfredo Pironti Inria Paris-Rocquencourt 23, Avenue d&#39;Italie Paris 75214 CEDEX 13 France
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   Email: alfredo.pironti@inria.fr
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Adam Langley Google Inc. 1600 Amphitheatre Parkway Mountain View, CA 94043 United States
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   Email: agl@google.com
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Marsh Ray Microsoft Corp. 1 Microsoft Way Redmond, WA 98052 United States
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   Email: maray@microsoft.com
+        </pre
+          >
+        </div>
+
+      </div>
+    </div>
+    <div id="rfc_footer"></div>
+  </body>
+</html>

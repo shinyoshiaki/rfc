@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RFC 8832 - WebRTC Data Channel Establishment Protocol 日本語訳</title>
+
+      <link rel="shortcut icon" type="image/x-icon"
+    href="https://tex2e.github.io/rfc-translater/favicon.ico" />
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+  <link rel="stylesheet" href="master.css">
+  <script src="index.js"></script>
+
+  <script>
+    var host = window.location.hostname;
+    if (host != "localhost") {
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-75892425-1', 'auto');
+      ga('send', 'pageview');
+    }
+  </script>
+
+  </head>
+  <body>
+      <nav class="navbar navbar-expand navbar-light bg-light">
+    <a class="navbar-brand" href="index.html">RFC Trans</a>
+    <div class="collapse navbar-collapse" id="navbarText">
+      <div class="navbar-nav mr-auto">
+        <a class="nav-item nav-link" href="privacy-policy.html">Privacy Policy</a>
+        <a class="nav-item nav-link" href="contact.html">Contact</a>
+        <a class="nav-item nav-link" href="../figs/html/index.html">Figs</a>
+      </div>
+      <div class="navbar-nav ml-auto">
+        <span class="navbar-text"><small>@tex2e</small></span>
+      </div>
+    </div>
+  </nav>
+
+    <span id="rfc_number" class="hidden">8832</span>
+    <div style="height: 1ex;"></div>
+    <div style="float: right; position: sticky; top: 0;">
+      <button type="button" class="btn btn-light btn-sm">
+        <a href="https://tools.ietf.org/html/rfc8832">Orig</a>
+      </button>
+    </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">RFC 8832 - WebRTC Data Channel Establishment Protocol 日本語訳</h4>
+            <span class="URL"
+              >URL :
+              <a href="https://tools.ietf.org/html/rfc8832">
+                https://tools.ietf.org/html/rfc8832
+              </a> </span
+            ><br />
+            <span class="title_ja">
+              タイトル : <strong>RFC 8832 - WebRTC Data Channel Establishment Protocol</strong></span
+            ><br />
+            <span class="updated_by">翻訳編集 : 自動生成</span
+            ><br />
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+Internet Engineering Task Force (IETF)                          R. Jesup
+Request for Comments: 8832                                       Mozilla
+Category: Standards Track                                      S. Loreto
+ISSN: 2070-1721                                                 Ericsson
+                                                                M. Tüxen
+                                         Münster Univ. of Appl. Sciences
+                                                            January 2021
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-15">
+            WebRTC Data Channel Establishment Protocol
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Abstract
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The WebRTC framework specifies protocol support for direct interactive rich communication using audio, video, and data between two peers&#39; web browsers. This document specifies a simple protocol for establishing symmetric data channels between the peers. It uses a two-way handshake and allows sending of user data without waiting for the handshake to complete.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Status of This Memo
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This is an Internet Standards Track document.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document is a product of the Internet Engineering Task Force (IETF). It represents the consensus of the IETF community. It has received public review and has been approved for publication by the Internet Engineering Steering Group (IESG). Further information on Internet Standards is available in Section 2 of RFC 7841.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Information about the current status of this document, any errata, and how to provide feedback on it may be obtained at https://www.rfc-editor.org/info/rfc8832.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Copyright Notice
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Copyright (c) 2021 IETF Trust and the persons identified as the document authors. All rights reserved.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document is subject to BCP 78 and the IETF Trust&#39;s Legal Provisions Relating to IETF Documents (https://trustee.ietf.org/license-info) in effect on the date of publication of this document. Please review these documents carefully, as they describe your rights and restrictions with respect to this document. Code Components extracted from this document must include Simplified BSD License text as described in Section 4.e of the Trust Legal Provisions and are provided without warranty as described in the Simplified BSD License.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Table of Contents
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            1. Introduction 2. Conventions 3. Terminology 4. Protocol Overview 5. Message Formats 5.1. DATA_CHANNEL_OPEN Message 5.2. DATA_CHANNEL_ACK Message 6. Procedures 7. Security Considerations 8. IANA Considerations 8.1. SCTP Payload Protocol Identifier 8.2. New Standalone Registry for DCEP 8.2.1. New Message Type Registry 8.2.2. New Channel Type Registry 9. References 9.1. Normative References 9.2. Informative References Acknowledgements Authors&#39; Addresses
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            1. Introduction
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The Data Channel Establishment Protocol (DCEP) is designed to provide, in the WebRTC data channel context [RFC8831], a simple in-band method for opening symmetric data channels. As discussed in [RFC8831], the protocol uses the Stream Control Transmission Protocol (SCTP) [RFC4960] encapsulated in Datagram Transport Layer Security (DTLS) (described in [RFC8261]). This allows DCEP to benefit from the already standardized transport and security features of SCTP and DTLS. DTLS 1.0 is defined in [RFC4347]; the present latest version, DTLS 1.2, is defined in [RFC6347]; and an upcoming version, DTLS 1.3, is defined in [TLS-DTLS13].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            2. Conventions
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The key words &#34;MUST&#34;, &#34;MUST NOT&#34;, &#34;REQUIRED&#34;, &#34;SHALL&#34;, &#34;SHALL NOT&#34;, &#34;SHOULD&#34;, &#34;SHOULD NOT&#34;, &#34;RECOMMENDED&#34;, &#34;NOT RECOMMENDED&#34;, &#34;MAY&#34;, and &#34;OPTIONAL&#34; in this document are to be interpreted as described in BCP?14 [RFC2119] [RFC8174] when, and only when, they appear in all capitals, as shown here.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            3. Terminology
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document uses the following terms:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Association: An SCTP association.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Stream: A unidirectional stream of an SCTP association. It is uniquely identified by an SCTP stream identifier (0-65534). Note: The SCTP stream identifier 65535 is reserved due to SCTP INIT and INIT-ACK chunks only allowing a maximum of 65535 streams to be negotiated (0-65534).
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Stream Identifier: The SCTP stream identifier uniquely identifying a stream.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Data Channel: Two streams with the same stream identifier, one in each direction, which are managed together.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            4. Protocol Overview
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The Data Channel Establishment Protocol is a simple, low-overhead way to establish bidirectional data channels over an SCTP association with a consistent set of properties.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The set of consistent properties includes:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            * reliable or unreliable message transmission. In case of unreliable transmissions, the same level of unreliability is used.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            * in-order or out-of-order message delivery.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            * the priority of the data channel.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            * an optional label for the data channel.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            * an optional protocol for the data channel.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            * the streams.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This protocol uses a two-way handshake to open a data channel. The handshake pairs one incoming and one outgoing stream, both having the same stream identifier, into a single bidirectional data channel. The peer that initiates opening a data channel selects a stream identifier for which the corresponding incoming and outgoing streams are unused and sends a DATA_CHANNEL_OPEN message on the outgoing stream. The peer responds with a DATA_CHANNEL_ACK message on its corresponding outgoing stream. Then the data channel is open. DCEP messages are sent on the same stream as the user messages belonging to the data channel. The demultiplexing is based on the SCTP Payload Protocol Identifier (PPID), since DCEP uses a specific PPID.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            | Note: The opening side MAY send user messages before the | DATA_CHANNEL_ACK is received.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            To avoid collisions where both sides try to open a data channel with the same stream identifiers, each side MUST use streams with either even or odd stream identifiers when sending a DATA_CHANNEL_OPEN message. When using SCTP over DTLS [RFC8261], the method used to determine which side uses odd or even is based on the underlying DTLS connection role: the side acting as the DTLS client MUST use streams with even stream identifiers; the side acting as the DTLS server MUST use streams with odd stream identifiers.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            | Note: There is no attempt to ensure uniqueness for the label; | if both sides open a data channel labeled &#34;x&#34; at the same time, | there will be two data channels labeled &#34;x&#34; -- one on an even | stream pair, one on an odd pair.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The purpose of the protocol field is to ease cross-application interoperation (&#34;federation&#34;) by identifying the user data being passed by means of an IANA-registered string from the &#34;WebSocket Subprotocol Name Registry&#34; defined in [RFC6455]. The field may be useful for homogeneous applications that may create more than one type of data channel. Note that there is no attempt to ensure uniqueness for the protocol field.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            5. Message Formats
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Every DCEP message starts with a one-byte field called &#34;Message Type&#34; that indicates the type of the message. The corresponding values are managed by IANA (see Section 8.2.1).
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            5.1. DATA_CHANNEL_OPEN Message
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This message is initially sent using the data channel on the stream used for user messages.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+      0                   1                   2                   3
+      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |  Message Type |  Channel Type |            Priority           |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |                    Reliability Parameter                      |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |         Label Length          |       Protocol Length         |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     \                                                               /
+     |                             Label                             |
+     /                                                               \
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     \                                                               /
+     |                            Protocol                           |
+     /                                                               \
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Message Type: 1 byte (unsigned integer) This field holds the IANA-defined message type for the DATA_CHANNEL_OPEN message. The value of this field is 0x03, as specified in Section 8.2.1.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Channel Type: 1 byte (unsigned integer) This field specifies the type of data channel to be opened. The values are managed by IANA (see Section 8.2.2):
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            DATA_CHANNEL_RELIABLE (0x00): The data channel provides a reliable in-order bidirectional communication.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            DATA_CHANNEL_RELIABLE_UNORDERED (0x80): The data channel provides a reliable unordered bidirectional communication.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            DATA_CHANNEL_PARTIAL_RELIABLE_REXMIT (0x01): The data channel provides a partially reliable in-order bidirectional communication. User messages will not be retransmitted more times than specified in the Reliability Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            DATA_CHANNEL_PARTIAL_RELIABLE_REXMIT_UNORDERED (0x81): The data channel provides a partially reliable unordered bidirectional communication. User messages will not be retransmitted more times than specified in the Reliability Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            DATA_CHANNEL_PARTIAL_RELIABLE_TIMED (0x02): The data channel provides a partially reliable in-order bidirectional communication. User messages might not be transmitted or retransmitted after a specified lifetime given in milliseconds in the Reliability Parameter. This lifetime starts when providing the user message to the protocol stack.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            DATA_CHANNEL_PARTIAL_RELIABLE_TIMED_UNORDERED (0x82): The data channel provides a partially reliable unordered bidirectional communication. User messages might not be transmitted or retransmitted after a specified lifetime given in milliseconds in the Reliability Parameter. This lifetime starts when providing the user message to the protocol stack.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Priority: 2 bytes (unsigned integer) The priority of the data channel, as described in [RFC8831].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Reliability Parameter: 4 bytes (unsigned integer) For reliable data channels, this field MUST be set to 0 on the sending side and MUST be ignored on the receiving side. If a partially reliable data channel with a limited number of retransmissions is used, this field specifies the number of retransmissions. If a partially reliable data channel with a limited lifetime is used, this field specifies the maximum lifetime in milliseconds. The following table summarizes this:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+     +================================================+=============+
+     | Channel Type                                   | Reliability |
+     |                                                |  Parameter  |
+     +================================================+=============+
+     | DATA_CHANNEL_RELIABLE                          |   Ignored   |
+     +------------------------------------------------+-------------+
+     | DATA_CHANNEL_RELIABLE_UNORDERED                |   Ignored   |
+     +------------------------------------------------+-------------+
+     | DATA_CHANNEL_PARTIAL_RELIABLE_REXMIT           |  Number of  |
+     |                                                |     RTX     |
+     +------------------------------------------------+-------------+
+     | DATA_CHANNEL_PARTIAL_RELIABLE_REXMIT_UNORDERED |  Number of  |
+     |                                                |     RTX     |
+     +------------------------------------------------+-------------+
+     | DATA_CHANNEL_PARTIAL_RELIABLE_TIMED            | Lifetime in |
+     |                                                |      ms     |
+     +------------------------------------------------+-------------+
+     | DATA_CHANNEL_PARTIAL_RELIABLE_TIMED_UNORDERED  | Lifetime in |
+     |                                                |      ms     |
+     +------------------------------------------------+-------------+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-33">
+            Table 1
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Label Length: 2 bytes (unsigned integer) The length of the label field in bytes.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Protocol Length: 2 bytes (unsigned integer) The length of the protocol field in bytes.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Label: Variable Length (sequence of characters) The name of the data channel as a UTF-8-encoded string, as specified in [RFC3629]. This may be an empty string.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Protocol: Variable Length (sequence of characters) If this is an empty string, the protocol is unspecified. If it is a non-empty string, it specifies a protocol registered in the &#34;WebSocket Subprotocol Name Registry&#34; created in [RFC6455]. This string is UTF-8 encoded, as specified in [RFC3629].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            5.2. DATA_CHANNEL_ACK Message
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This message is sent in response to a DATA_CHANNEL_OPEN_RESPONSE message. It is sent on the stream used for user messages using the data channel. Reception of this message tells the opener that the data channel setup handshake is complete.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+      0                   1                   2                   3
+      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |  Message Type |
+     +-+-+-+-+-+-+-+-+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Message Type: 1 byte (unsigned integer) This field holds the IANA-defined message type for the DATA_CHANNEL_ACK message. The value of this field is 0x02, as specified in Section 8.2.1.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            6. Procedures
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            All DCEP messages MUST be sent using ordered delivery and reliable transmission. They MUST be sent on the same outgoing stream as the user messages belonging to the corresponding data channel. Multiplexing and demultiplexing is done by using the SCTP PPID. Therefore, a DCEP message MUST be sent with the assigned PPID for the Data Channel Establishment Protocol (see Section 8.1). Other messages MUST NOT be sent using this PPID.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The peer that initiates opening a data channel selects a stream identifier for which the corresponding incoming and outgoing streams are unused. If the side is acting as the DTLS client, it MUST choose an even stream identifier; if the side is acting as the DTLS server, it MUST choose an odd one. The initiating peer fills in the parameters of the DATA_CHANNEL_OPEN message and sends it on the chosen stream.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If a DATA_CHANNEL_OPEN message is received on an unused stream, the stream identifier corresponds to the role of the peer, and all parameters in the DATA_CHANNEL_OPEN message are valid, then a corresponding DATA_CHANNEL_ACK message is sent on the stream with the same stream identifier as the one the DATA_CHANNEL_OPEN message was received on.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If the DATA_CHANNEL_OPEN message doesn&#39;t satisfy the conditions above, the receiver MUST close the corresponding data channel using the procedure described in [RFC8831] and MUST NOT send a DATA_CHANNEL_ACK message in response to the received message. This might occur if, for example, a DATA_CHANNEL_OPEN message is received on an already used stream, there are problems with parameters within the DATA_CHANNEL_OPEN message, the odd/even rule is violated, or the DATA_CHANNEL_OPEN message itself is not well formed. Therefore, receiving an SCTP stream-reset request for a stream on which no DATA_CHANNEL_ACK message has been received indicates to the sender of the corresponding DATA_CHANNEL_OPEN message the failure of the data channel setup procedure. After also successfully resetting the corresponding outgoing stream, which concludes the data channel closing initiated by the peer, a new DATA_CHANNEL_OPEN message can be sent on the stream.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            After the DATA_CHANNEL_OPEN message has been sent, the sender of that message MAY start sending messages containing user data without waiting for the reception of the corresponding DATA_CHANNEL_ACK message. However, before the DATA_CHANNEL_ACK message or any other message has been received on a data channel, all other messages containing user data and belonging to this data channel MUST be sent ordered, no matter whether the data channel is ordered or not. After the DATA_CHANNEL_ACK or any other message has been received on the data channel, messages containing user data MUST be sent ordered on ordered data channels and MUST be sent unordered on unordered data channels. Therefore, receiving a message containing user data on an unused stream indicates an error. In that case, the corresponding data channel MUST be closed, as described in [RFC8831].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            7. Security Considerations
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The DATA_CHANNEL_OPEN message contains two variable-length fields: the protocol and the label. A receiver must be prepared to receive DATA_CHANNEL_OPEN messages where these fields have the maximum length of 65535 bytes. Error cases such as using inconsistent lengths of fields, using unknown parameter values, or violating the odd/even rule must also be handled by closing the corresponding data channel. An end point must also be prepared for the peer to open the maximum number of data channels.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This protocol does not provide privacy, integrity, or authentication. It needs to be used as part of a protocol suite that contains all these things. Such a protocol suite is specified in [RFC8261].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            For general considerations, see [RFC8826] and [RFC8827].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            8. IANA Considerations
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            IANA has updated the reference of an already existing SCTP PPID assignment (Section 8.1) and created a new standalone registry with its own URL for DCEP (Section 8.2) containing two new registration tables (Sections 8.2.1 and 8.2.2).
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            8.1. SCTP Payload Protocol Identifier
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document uses an SCTP Payload Protocol Identifier (PPID) previously registered as &#34;WebRTC Control&#34;. [RFC4960] created the &#34;SCTP Payload Protocol Identifiers&#34; registry, in which this identifier was assigned. IANA has updated the PPID name from &#34;WebRTC Control&#34; to &#34;WebRTC DCEP&#34; and has updated the reference to point to this document. The corresponding date has been kept.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Therefore, this assignment now appears as follows:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+           +=============+===========+===========+============+
+           | Value       | SCTP PPID | Reference | Date       |
+           +=============+===========+===========+============+
+           | WebRTC DCEP | 50        | RFC 8832  | 2013-09-20 |
+           +-------------+-----------+-----------+------------+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-33">
+            Table 2
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            8.2. New Standalone Registry for DCEP
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            IANA has created the &#34;Data Channel Establishment Protocol (DCEP) Parameters&#34; registry. It contains the two tables provided in Sections 8.2.1 and 8.2.2.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            8.2.1. New Message Type Registry
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            IANA has created the &#34;Message Types&#34; registry for DCEP to manage the one-byte &#34;Message Type&#34; field in DCEP messages (see Section 5). This registration table is a subregistry of the registry described in Section 8.2.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The assignment of new message types is done through an RFC Required action, as defined in [RFC8126]. Documentation of new message types MUST contain the following information:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            1. A name for the new message type.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            2. A detailed procedural description of how each message type is used with within DCEP.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The following are the initial registrations:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+               +===================+===========+===========+
+               | Name              | Type      | Reference |
+               +===================+===========+===========+
+               | Reserved          | 0x00      | RFC 8832  |
+               +-------------------+-----------+-----------+
+               | Reserved          | 0x01      | RFC 8832  |
+               +-------------------+-----------+-----------+
+               | DATA_CHANNEL_ACK  | 0x02      | RFC 8832  |
+               +-------------------+-----------+-----------+
+               | DATA_CHANNEL_OPEN | 0x03      | RFC 8832  |
+               +-------------------+-----------+-----------+
+               | Unassigned        | 0x04-0xfe |           |
+               +-------------------+-----------+-----------+
+               | Reserved          | 0xff      | RFC 8832  |
+               +-------------------+-----------+-----------+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-34">
+            Table 3
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Note that values 0x00 and 0x01 are reserved to avoid interoperability problems, since they have been used in draft versions of the document. The value 0xff has been reserved for future extensibility. The range of possible values is from 0x00 to 0xff.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            8.2.2. New Channel Type Registry
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            IANA has created the &#34;Channel Types&#34; registry for DCEP to manage the one-byte &#34;Channel Type&#34; field in DATA_CHANNEL_OPEN messages (see Section 5.1). This registration table is a subregistry within the registry described in Section 8.2.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The assignment of new message types is done through an RFC Required action, as defined in [RFC8126]. Documentation of new Channel Types MUST contain the following information:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            1. A name for the new Channel Type.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            2. A detailed procedural description of the user message handling for data channels using this new Channel Type.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If new Channel Types support ordered and unordered message delivery, the high-order bit MUST be used to indicate whether or not the message delivery is unordered.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The following are the initial registrations:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   +================================================+======+===========+
+   | Name                                           | Type | Reference |
+   +================================================+======+===========+
+   | DATA_CHANNEL_RELIABLE                          | 0x00 | RFC 8832  |
+   +------------------------------------------------+------+-----------+
+   | DATA_CHANNEL_RELIABLE_UNORDERED                | 0x80 | RFC 8832  |
+   +------------------------------------------------+------+-----------+
+   | DATA_CHANNEL_PARTIAL_RELIABLE_REXMIT           | 0x01 | RFC 8832  |
+   +------------------------------------------------+------+-----------+
+   | DATA_CHANNEL_PARTIAL_RELIABLE_REXMIT_UNORDERED | 0x81 | RFC 8832  |
+   +------------------------------------------------+------+-----------+
+   | DATA_CHANNEL_PARTIAL_RELIABLE_TIMED            | 0x02 | RFC 8832  |
+   +------------------------------------------------+------+-----------+
+   | DATA_CHANNEL_PARTIAL_RELIABLE_TIMED_UNORDERED  | 0x82 | RFC 8832  |
+   +------------------------------------------------+------+-----------+
+   | Reserved                                       | 0x7f | RFC 8832  |
+   +------------------------------------------------+------+-----------+
+   | Reserved                                       | 0xff | RFC 8832  |
+   +------------------------------------------------+------+-----------+
+   | Unassigned                                     | rest |           |
+   +------------------------------------------------+------+-----------+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-34">
+            Table 4
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Values 0x7f and 0xff have been reserved for future extensibility. The range of possible values is from 0x00 to 0xff.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            9. References
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            9.1. Normative References
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC2119] Bradner, S., &#34;Key words for use in RFCs to Indicate Requirement Levels&#34;, BCP 14, RFC 2119, DOI 10.17487/RFC2119, March 1997, &lt;https://www.rfc-editor.org/info/rfc2119&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC8174] Leiba, B., &#34;Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words&#34;, BCP 14, RFC 8174, DOI 10.17487/RFC8174, May 2017, &lt;https://www.rfc-editor.org/info/rfc8174&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC3629] Yergeau, F., &#34;UTF-8, a transformation format of ISO 10646&#34;, STD 63, RFC 3629, DOI 10.17487/RFC3629, November 2003, &lt;https://www.rfc-editor.org/info/rfc3629&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC4960] Stewart, R., Ed., &#34;Stream Control Transmission Protocol&#34;, RFC 4960, DOI 10.17487/RFC4960, September 2007, &lt;https://www.rfc-editor.org/info/rfc4960&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC8126] Cotton, M., Leiba, B., and T. Narten, &#34;Guidelines for Writing an IANA Considerations Section in RFCs&#34;, BCP 26, RFC 8126, DOI 10.17487/RFC8126, June 2017, &lt;https://www.rfc-editor.org/info/rfc8126&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC8261] Tuexen, M., Stewart, R., Jesup, R., and S. Loreto, &#34;Datagram Transport Layer Security (DTLS) Encapsulation of SCTP Packets&#34;, RFC 8261, DOI 10.17487/RFC8261, November 2017, &lt;https://www.rfc-editor.org/info/rfc8261&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC8831] Jesup, R., Loreto, S., and M. Tüxen, &#34;WebRTC Data Channels&#34;, RFC 8831, DOI 10.17487/RFC8831, January 2021, &lt;https://www.rfc-editor.org/info/rfc8831&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            9.2. Informative References
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC4347] Rescorla, E. and N. Modadugu, &#34;Datagram Transport Layer Security&#34;, RFC 4347, DOI 10.17487/RFC4347, April 2006, &lt;https://www.rfc-editor.org/info/rfc4347&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC6347] Rescorla, E. and N. Modadugu, &#34;Datagram Transport Layer Security Version 1.2&#34;, RFC 6347, DOI 10.17487/RFC6347, January 2012, &lt;https://www.rfc-editor.org/info/rfc6347&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC6455] Fette, I. and A. Melnikov, &#34;The WebSocket Protocol&#34;, RFC 6455, DOI 10.17487/RFC6455, December 2011, &lt;https://www.rfc-editor.org/info/rfc6455&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC8826] Rescorla, E., &#34;Security Considerations for WebRTC&#34;, RFC 8826, DOI 10.17487/RFC8826, January 2021, &lt;https://www.rfc-editor.org/info/rfc8826&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC8827] Rescorla, E., &#34;WebRTC Security Architecture&#34;, RFC 8827, DOI 10.17487/RFC8827, January 2021, &lt;https://www.rfc-editor.org/info/rfc8827&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [TLS-DTLS13] Rescorla, E., Tschofenig, H., and N. Modadugu, &#34;The Datagram Transport Layer Security (DTLS) Protocol Version 1.3&#34;, Work in Progress, Internet-Draft, draft-ietf-tls-dtls13-39, 2 November 2020, &lt;https://tools.ietf.org/html/draft-ietf-tls-dtls13-39&gt;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Acknowledgements
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The authors wish to thank Harald Alvestrand, Richard Barnes, Adam Bergkvist, Spencer Dawkins, Barry Dingle, Stefan Håkansson, Cullen Jennings, Paul Kyzivat, Doug Leonard, Alexey Melnikov, Pete Resnick, Irene Rüngeler, Randall Stewart, Peter Thatcher, Martin Thomson, Justin Uberti, and many others for their invaluable comments.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Authors&#39; Addresses
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Randell Jesup Mozilla United States of America
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   Email: randell-ietf@jesup.org
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Salvatore Loreto Ericsson Hirsalantie 11 FI-02420 Jorvas Finland
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   Email: salvatore.loreto@ericsson.com
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Michael Tüxen Münster University of Applied Sciences Stegerwaldstrasse 39 48565 Steinfurt Germany
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   Email: tuexen@fh-muenster.de
+        </pre
+          >
+        </div>
+
+      </div>
+    </div>
+    <div id="rfc_footer"></div>
+  </body>
+</html>

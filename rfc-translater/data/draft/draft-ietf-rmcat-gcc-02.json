@@ -1,0 +1,948 @@
+{
+  "title": {
+    "text": "draft-ietf-rmcat-gcc-02 - A Google Congestion Control Algorithm for Real-Time Communication"
+  },
+  "number": "https://tools.ietf.org/html/draft-ietf-rmcat-gcc-02",
+  "created_at": "2020-11-10 19:51:56.227122+09:00",
+  "updated_by": "",
+  "contents": [
+    {
+      "indent": 0,
+      "text": "Network Working Group                                          S. Holmer\nInternet-Draft                                                 H. Lundin\nIntended status: Informational                                    Google\nExpires: January 9, 2017                                     G. Carlucci\n                                                             L. De Cicco\n                                                              S. Mascolo\n                                                     Politecnico di Bari\n                                                            July 8, 2016",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "A Google Congestion Control Algorithm for Real-Time Communication draft-ietf-rmcat-gcc-02"
+    },
+    {
+      "indent": 0,
+      "text": "Abstract"
+    },
+    {
+      "indent": 3,
+      "text": "This document describes two methods of congestion control when using real-time communications on the World Wide Web (RTCWEB); one delay-based and one loss-based."
+    },
+    {
+      "indent": 3,
+      "text": "It is published as an input document to the RMCAT working group on congestion control for media streams. The mailing list of that working group is rmcat@ietf.org."
+    },
+    {
+      "indent": 0,
+      "text": "Requirements Language"
+    },
+    {
+      "indent": 3,
+      "text": "The key words \"MUST\", \"MUST NOT\", \"REQUIRED\", \"SHALL\", \"SHALL NOT\", \"SHOULD\", \"SHOULD NOT\", \"RECOMMENDED\", \"MAY\", and \"OPTIONAL\" in this document are to be interpreted as described in RFC 2119 [RFC2119]."
+    },
+    {
+      "indent": 0,
+      "text": "Status of This Memo"
+    },
+    {
+      "indent": 3,
+      "text": "This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79."
+    },
+    {
+      "indent": 3,
+      "text": "Internet-Drafts are working documents of the Internet Engineering Task Force (IETF). Note that other groups may also distribute working documents as Internet-Drafts. The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/."
+    },
+    {
+      "indent": 3,
+      "text": "Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time. It is inappropriate to use Internet-Drafts as reference material or to cite them other than as \"work in progress.\""
+    },
+    {
+      "indent": 3,
+      "text": "This Internet-Draft will expire on January 9, 2017."
+    },
+    {
+      "indent": 0,
+      "text": "Copyright Notice"
+    },
+    {
+      "indent": 3,
+      "text": "Copyright (c) 2016 IETF Trust and the persons identified as the document authors. All rights reserved."
+    },
+    {
+      "indent": 3,
+      "text": "This document is subject to BCP 78 and the IETF Trust's Legal Provisions Relating to IETF Documents (http://trustee.ietf.org/license-info) in effect on the date of publication of this document. Please review these documents carefully, as they describe your rights and restrictions with respect to this document. Code Components extracted from this document must include Simplified BSD License text as described in Section 4.e of the Trust Legal Provisions and are provided without warranty as described in the Simplified BSD License."
+    },
+    {
+      "indent": 0,
+      "text": "Table of Contents"
+    },
+    {
+      "indent": 3,
+      "text": "1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   3\n  1.1.  Mathematical notation conventions . . . . . . . . . . . .   3\n2.  System model  . . . . . . . . . . . . . . . . . . . . . . . .   4\n3.  Feedback and extensions . . . . . . . . . . . . . . . . . . .   4\n4.  Sending Engine  . . . . . . . . . . . . . . . . . . . . . . .   5\n5.  Delay-based control . . . . . . . . . . . . . . . . . . . . .   5\n  5.1.  Arrival-time model  . . . . . . . . . . . . . . . . . . .   6\n  5.2.  Pre-filtering . . . . . . . . . . . . . . . . . . . . . .   7\n  5.3.  Arrival-time filter . . . . . . . . . . . . . . . . . . .   7\n  5.4.  Over-use detector . . . . . . . . . . . . . . . . . . . .   8\n  5.5.  Rate control  . . . . . . . . . . . . . . . . . . . . . .  10\n  5.6.  Parameters settings . . . . . . . . . . . . . . . . . . .  12\n6.  Loss-based control  . . . . . . . . . . . . . . . . . . . . .  13\n7.  Interoperability Considerations . . . . . . . . . . . . . . .  14\n8.  Implementation Experience . . . . . . . . . . . . . . . . . .  14\n9.  Further Work  . . . . . . . . . . . . . . . . . . . . . . . .  15\n10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  15\n11. Security Considerations . . . . . . . . . . . . . . . . . . .  15\n12. Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  15\n13. References  . . . . . . . . . . . . . . . . . . . . . . . . .  16\n  13.1.  Normative References . . . . . . . . . . . . . . . . . .  16\n  13.2.  Informative References . . . . . . . . . . . . . . . . .  16\nAppendix A.  Change log . . . . . . . . . . . . . . . . . . . . .  16\n  A.1.  Version -00 to -01  . . . . . . . . . . . . . . . . . . .  16\n  A.2.  Version -01 to -02  . . . . . . . . . . . . . . . . . . .  17\n  A.3.  Version -02 to -03  . . . . . . . . . . . . . . . . . . .  17\n  A.4.  rtcweb-03 to rmcat-00 . . . . . . . . . . . . . . . . . .  17\n  A.5.  rmcat -00 to -01  . . . . . . . . . . . . . . . . . . . .  17\n  A.6.  rmcat -01 to -02  . . . . . . . . . . . . . . . . . . . .  17\n  A.7.  rmcat -02 to -03  . . . . . . . . . . . . . . . . . . . .  18\n  A.8.  ietf-rmcat -00 to ietf-rmcat -01  . . . . . . . . . . . .  18",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "  A.9.  ietf-rmcat -01 to ietf-rmcat -02  . . . . . . . . . . . .  18\nAuthors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  18",
+      "raw": true
+    },
+    {
+      "indent": 0,
+      "text": "1. Introduction",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "Congestion control is a requirement for all applications sharing the Internet resources [RFC2914]."
+    },
+    {
+      "indent": 3,
+      "text": "Congestion control for real-time media is challenging for a number of reasons:"
+    },
+    {
+      "indent": 3,
+      "text": "o The media is usually encoded in forms that cannot be quickly changed to accommodate varying bandwidth, and bandwidth requirements can often be changed only in discrete, rather large steps"
+    },
+    {
+      "indent": 3,
+      "text": "o The participants may have certain specific wishes on how to respond - which may not be reducing the bandwidth required by the flow on which congestion is discovered"
+    },
+    {
+      "indent": 3,
+      "text": "o The encodings are usually sensitive to packet loss, while the real-time requirement precludes the repair of packet loss by retransmission"
+    },
+    {
+      "indent": 3,
+      "text": "This memo describes two congestion control algorithms that together are able to provide good performance and reasonable bandwidth sharing with other video flows using the same congestion control and with TCP flows that share the same links."
+    },
+    {
+      "indent": 3,
+      "text": "The signaling used consists of experimental RTP header extensions and RTCP messages RFC 3550 [RFC3550] as defined in [abs-send-time], [I-D.alvestrand-rmcat-remb] and [I-D.holmer-rmcat-transport-wide-cc-extensions]."
+    },
+    {
+      "indent": 0,
+      "text": "1.1. Mathematical notation conventions",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "The mathematics of this document have been transcribed from a more formula-friendly format."
+    },
+    {
+      "indent": 3,
+      "text": "The following notational conventions are used:"
+    },
+    {
+      "indent": 3,
+      "text": "X_hat An estimate of the true value of variable X - conventionally marked by a circumflex accent on top of the variable name."
+    },
+    {
+      "indent": 3,
+      "text": "X(i) The \"i\"th value of vector X - conventionally marked by a subscript i."
+    },
+    {
+      "indent": 3,
+      "text": "E{X} The expected value of the stochastic variable X"
+    },
+    {
+      "indent": 0,
+      "text": "2. System model",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "The following elements are in the system:"
+    },
+    {
+      "indent": 3,
+      "text": "o RTP packet - an RTP packet containing media data."
+    },
+    {
+      "indent": 3,
+      "text": "o Group of packets - a set of RTP packets transmitted from the sender uniquely identified by the group departure and group arrival time (absolute send time) [abs-send-time]. These could be video packets, audio packets, or a mix of audio and video packets."
+    },
+    {
+      "indent": 3,
+      "text": "o Incoming media stream - a stream of frames consisting of RTP packets."
+    },
+    {
+      "indent": 3,
+      "text": "o RTP sender - sends the RTP stream over the network to the RTP receiver. It generates the RTP timestamp and the abs-send-time header extension"
+    },
+    {
+      "indent": 3,
+      "text": "o RTP receiver - receives the RTP stream, marks the time of arrival."
+    },
+    {
+      "indent": 3,
+      "text": "o RTCP sender at RTP receiver - sends receiver reports, REMB messages and transport-wide RTCP feedback messages."
+    },
+    {
+      "indent": 3,
+      "text": "o RTCP receiver at RTP sender - receives receiver reports and REMB messages and transport-wide RTCP feedback messages, reports these to the sender side controller."
+    },
+    {
+      "indent": 3,
+      "text": "o RTCP receiver at RTP receiver, receives sender reports from the sender."
+    },
+    {
+      "indent": 3,
+      "text": "o Loss-based controller - takes loss rate measurement, round trip time measurement and REMB messages, and computes a target sending bitrate."
+    },
+    {
+      "indent": 3,
+      "text": "o Delay-based controller - takes the packet arrival info, either at the RTP receiver, or from the feedback received by the RTP sender, and computes a maximum bitrate which it passes to the loss-based controller."
+    },
+    {
+      "indent": 3,
+      "text": "Together, loss-based controller and delay-based controller implement the congestion control algorithm."
+    },
+    {
+      "indent": 0,
+      "text": "3. Feedback and extensions",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "There are two ways to implement the proposed algorithm. One where both the controllers are running at the send-side, and one where the delay-based controller runs on the receive-side and the loss-based controller runs on the send-side."
+    },
+    {
+      "indent": 3,
+      "text": "The first version can be realized by using a per-packet feedback protocol as described in [I-D.holmer-rmcat-transport-wide-cc-extensions]. Here, the RTP receiver will record the arrival time and the transport-wide sequence number of each received packet, which will be sent back to the sender periodically using the transport-wide feedback message. The RECOMMENDED feedback interval is once per received video frame or at least once every 30 ms if audio-only or multi-stream. If the feedback overhead needs to be limited this interval can be increased to 100 ms."
+    },
+    {
+      "indent": 3,
+      "text": "The sender will map the received {sequence number, arrival time} pairs to the send-time of each packet covered by the feedback report, and feed those timestamps to the delay-based controller. It will also compute a loss ratio based on the sequence numbers in the feedback message."
+    },
+    {
+      "indent": 3,
+      "text": "The second version can be realized by having a delay-based controller at the receive-side, monitoring and processing the arrival time and size of incoming packets. The sender SHOULD use the abs-send-time RTP header extension [abs-send-time] to enable the receiver to compute the inter-group delay variation. The output from the delay-based controller will be a bitrate, which will be sent back to the sender using the REMB feedback message [I-D.alvestrand-rmcat-remb]. The packet loss ratio is sent back via RTCP receiver reports. At the sender the bitrate in the REMB message and the fraction of packets lost are fed into the loss-based controller, which outputs a final target bitrate. It is RECOMMENDED to send the REMB message as soon as congestion is detected, and otherwise at least once every second."
+    },
+    {
+      "indent": 0,
+      "text": "4. Sending Engine",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "Pacing is used to actuate the target bitrate computed by the controllers."
+    },
+    {
+      "indent": 3,
+      "text": "When media encoder produces data, this is fed into a Pacer queue. The Pacer sends a group of packets to the network every burst_time interval. RECOMMENDED value for burst_time is 5 ms. The size of a group of packets is computed as the product between the target bitrate and the burst_time."
+    },
+    {
+      "indent": 0,
+      "text": "5. Delay-based control",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "The delay-based control algorithm can be further decomposed into four parts: a pre-filtering, an arrival-time filter, an over-use detector, and a rate controller."
+    },
+    {
+      "indent": 0,
+      "text": "5.1. Arrival-time model",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "This section describes an adaptive filter that continuously updates estimates of network parameters based on the timing of the received groups of packets."
+    },
+    {
+      "indent": 3,
+      "text": "We define the inter-arrival time, t(i) - t(i-1), as the difference in arrival time of two groups of packets. Correspondingly, the inter-departure time, T(i) - T(i-1), is defined as the difference in departure-time of two groups of packets. Finally, the inter-group delay variation, d(i), is defined as the difference between the inter-arrival time and the inter-departure time. Or interpreted differently, as the difference between the delay of group i and group i-1."
+    },
+    {
+      "indent": 5,
+      "text": "d(i) = t(i) - t(i-1) - (T(i) - T(i-1))",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "An inter-departure time is computed between consecutive groups as T(i) - T(i-1), where T(i) is the departure timestamp of the last packet in the current packet group being processed. Any packets received out of order are ignored by the arrival-time model."
+    },
+    {
+      "indent": 3,
+      "text": "Each group is assigned a receive time t(i), which corresponds to the time at which the last packet of the group was received. A group is delayed relative to its predecessor if t(i) - t(i-1) > T(i) - T(i-1), i.e., if the inter-arrival time is larger than the inter-departure time."
+    },
+    {
+      "indent": 3,
+      "text": "We can model the inter-group delay variation as:"
+    },
+    {
+      "indent": 5,
+      "text": "d(i) = w(i)",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "Here, w(i) is a sample from a stochastic process W, which is a function of the link capacity, the current cross traffic, and the current sent bitrate. We model W as a white Gaussian process. If we are over-using the channel we expect the mean of w(i) to increase, and if a queue on the network path is being emptied, the mean of w(i) will decrease; otherwise the mean of w(i) will be zero."
+    },
+    {
+      "indent": 3,
+      "text": "Breaking out the mean, m(i), from w(i) to make the process zero mean,\nwe get",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "Equation 1"
+    },
+    {
+      "indent": 5,
+      "text": "d(i) = m(i) + v(i)",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "The noise term v(i) represents network jitter and other delay effects not captured by the model."
+    },
+    {
+      "indent": 0,
+      "text": "5.2. Pre-filtering",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "The pre-filtering aims at handling delay transients caused by channel outages. During an outage, packets being queued in network buffers, for reasons unrelated to congestion, are delivered in a burst when the outage ends."
+    },
+    {
+      "indent": 3,
+      "text": "The pre-filtering merges together groups of packets that arrive in a burst. Packets are merged in the same group if one of these two conditions holds:"
+    },
+    {
+      "indent": 3,
+      "text": "o A sequence of packets which are sent within a burst_time interval constitute a group."
+    },
+    {
+      "indent": 3,
+      "text": "o A Packet which has an inter-arrival time less than burst_time and an inter-group delay variation d(i) less than 0 is considered being part of the current group of packets."
+    },
+    {
+      "indent": 0,
+      "text": "5.3. Arrival-time filter",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "The parameter d(i) is readily available for each group of packets, i > 1. We want to estimate m(i) and use this estimate to detect whether or not the bottleneck link is over-used. The parameter can be estimated by any adaptive filter - we are using the Kalman filter."
+    },
+    {
+      "indent": 3,
+      "text": "Let m(i) be the estimate at time i"
+    },
+    {
+      "indent": 3,
+      "text": "We model the state evolution from time i to time i+1 as"
+    },
+    {
+      "indent": 5,
+      "text": "m(i+1) = m(i) + u(i)",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "where u(i) is the state noise that we model as a stationary process with Gaussian statistic with zero mean and variance"
+    },
+    {
+      "indent": 5,
+      "text": "q(i) = E{u(i)^2}",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "q(i) is RECOMMENDED equal to 10^-3",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "Given equation 1 we get"
+    },
+    {
+      "indent": 7,
+      "text": "d(i) = m(i) + v(i)",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "where v(i) is zero mean white Gaussian measurement noise with\nvariance var_v = E{v(i)^2}",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "The Kalman filter recursively updates our estimate m_hat(i) as"
+    },
+    {
+      "indent": 5,
+      "text": "z(i) = d(i) - m_hat(i-1)",
+      "raw": true
+    },
+    {
+      "indent": 5,
+      "text": "m_hat(i) = m_hat(i-1) + z(i) * k(i)",
+      "raw": true
+    },
+    {
+      "indent": 5,
+      "text": "                   e(i-1) + q(i)\nk(i) = ----------------------------------------\n           var_v_hat(i) + (e(i-1) + q(i))",
+      "raw": true
+    },
+    {
+      "indent": 5,
+      "text": "e(i) = (1 - k(i)) * (e(i-1) + q(i))",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "The variance var_v(i) = E{v(i)^2} is estimated using an exponential\naveraging filter, modified for variable sampling rate",
+      "raw": true
+    },
+    {
+      "indent": 5,
+      "text": "var_v_hat(i) = max(alpha * var_v_hat(i-1) + (1-alpha) * z(i)^2, 1)",
+      "raw": true
+    },
+    {
+      "indent": 5,
+      "text": "alpha = (1-chi)^(30/(1000 * f_max))",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "where f_max = max {1/(T(j) - T(j-1))} for j in i-K+1,...,i is the highest rate at which the last K packet groups have been received and chi is a filter coefficient typically chosen as a number in the interval [0.1, 0.001]. Since our assumption that v(i) should be zero mean WGN is less accurate in some cases, we have introduced an additional outlier filter around the updates of var_v_hat. If z(i) > 3*sqrt(var_v_hat) the filter is updated with 3*sqrt(var_v_hat) rather than z(i). For instance v(i) will not be white in situations where packets are sent at a higher rate than the channel capacity, in which case they will be queued behind each other."
+    },
+    {
+      "indent": 0,
+      "text": "5.4. Over-use detector",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "The inter-group delay variation estimate m(i), obtained as the output of the arrival-time filter, is compared with a threshold del_var_th(i). An estimate above the threshold is considered as an indication of over-use. Such an indication is not enough for the detector to signal over-use to the rate control subsystem. A definitive over-use will be signaled only if over-use has been detected for at least overuse_time_th milliseconds. However, if m(i) < m(i-1), over-use will not be signaled even if all the above conditions are met. Similarly, the opposite state, under-use, is detected when m(i) < -del_var_th(i). If neither over-use nor under-use is detected, the detector will be in the normal state."
+    },
+    {
+      "indent": 3,
+      "text": "The threshold del_var_th has a remarkable impact on the overall dynamics and performance of the algorithm. In particular, it has been shown that using a static threshold del_var_th, a flow controlled by the proposed algorithm can be starved by a concurrent TCP flow [Pv13]. This starvation can be avoided by increasing the threshold del_var_th to a sufficiently large value."
+    },
+    {
+      "indent": 3,
+      "text": "The reason is that, by using a larger value of del_var_th, a larger queuing delay can be tolerated, whereas with a small del_var_th, the over-use detector quickly reacts to a small increase in the offset estimate m(i) by generating an over-use signal that reduces the delay-based estimate of the available bandwidth A_hat (see Section 4.4). Thus, it is necessary to dynamically tune the threshold del_var_th to get good performance in the most common scenarios, such as when competing with loss-based flows."
+    },
+    {
+      "indent": 3,
+      "text": "For this reason, we propose to vary the threshold del_var_th(i) according to the following dynamic equation:"
+    },
+    {
+      "indent": 0,
+      "text": "del_var_th(i) =\n         del_var_th(i-1) + (t(i)-t(i-1)) * K(i) * (|m(i)|-del_var_th(i-1))",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "with K(i)=K_d if |m(i)| < del_var_th(i-1) or K(i)=K_u otherwise. The rationale is to increase del_var_th(i) when m(i) is outside of the range [-del_var_th(i-1),del_var_th(i-1)], whereas, when the offset estimate m(i) falls back into the range, del_var_th is decreased. In this way when m(i) increases, for instance due to a TCP flow entering the same bottleneck, del_var_th(i) increases and avoids the uncontrolled generation of over-use signals which may lead to starvation of the flow controlled by the proposed algorithm [Pv13]. Moreover, del_var_th(i) SHOULD NOT be updated if this condition holds:"
+    },
+    {
+      "indent": 5,
+      "text": "|m(i)| - del_var_th(i) > 15",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "It is also RECOMMENDED to clamp del_var_th(i) to the range [6, 600], since a too small del_var_th(i) can cause the detector to become overly sensitive."
+    },
+    {
+      "indent": 3,
+      "text": "On the other hand, when m(i) falls back into the range [-del_var_th(i-1),del_var_th(i-1)] the threshold del_var_th(i) is decreased so that a lower queuing delay can be achieved."
+    },
+    {
+      "indent": 3,
+      "text": "It is RECOMMENDED to choose K_u > K_d so that the rate at which del_var_th is increased is higher than the rate at which it is decreased. With this setting it is possible to increase the threshold in the case of a concurrent TCP flow and prevent starvation as well as enforcing intra-protocol fairness. RECOMMENDED values for del_var_th(0), overuse_time_th, K_u and K_d are respectively 12.5 ms, 10 ms, 0.01 and 0.00018."
+    },
+    {
+      "indent": 0,
+      "text": "5.5. Rate control",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "The rate control is split in two parts, one controlling the bandwidth estimate based on delay, and one controlling the bandwidth estimate based on loss. Both are designed to increase the estimate of the available bandwidth A_hat as long as there is no detected congestion and to ensure that we will eventually match the available bandwidth of the channel and detect an over-use."
+    },
+    {
+      "indent": 3,
+      "text": "As soon as over-use has been detected, the available bandwidth estimated by the delay-based controller is decreased. In this way we get a recursive and adaptive estimate of the available bandwidth."
+    },
+    {
+      "indent": 3,
+      "text": "In this document we make the assumption that the rate control subsystem is executed periodically and that this period is constant."
+    },
+    {
+      "indent": 3,
+      "text": "The rate control subsystem has 3 states: Increase, Decrease and Hold. \"Increase\" is the state when no congestion is detected; \"Decrease\" is the state where congestion is detected, and \"Hold\" is a state that waits until built-up queues have drained before going to \"increase\" state."
+    },
+    {
+      "indent": 3,
+      "text": "The state transitions (with blank fields meaning \"remain in state\") are:"
+    },
+    {
+      "indent": 3,
+      "text": "+----+--------+-----------+------------+--------+\n|     \\ State |   Hold    |  Increase  |Decrease|\n|      \\      |           |            |        |\n| Signal\\     |           |            |        |\n+--------+----+-----------+------------+--------+\n|  Over-use   | Decrease  |  Decrease  |        |\n+-------------+-----------+------------+--------+\n|  Normal     | Increase  |            |  Hold  |\n+-------------+-----------+------------+--------+\n|  Under-use  |           |   Hold     |  Hold  |\n+-------------+-----------+------------+--------+",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "The subsystem starts in the increase state, where it will stay until over-use or under-use has been detected by the detector subsystem. On every update the delay-based estimate of the available bandwidth is increased, either multiplicatively or additively, depending on its current state."
+    },
+    {
+      "indent": 3,
+      "text": "The system does a multiplicative increase if the current bandwidth estimate appears to be far from convergence, while it does an additive increase if it appears to be closer to convergence. We assume that we are close to convergence if the currently incoming bitrate, R_hat(i), is close to an average of the incoming bitrates at the time when we previously have been in the Decrease state. \"Close\" is defined as three standard deviations around this average. It is RECOMMENDED to measure this average and standard deviation with an exponential moving average with the smoothing factor 0.95, as it is expected that this average covers multiple occasions at which we are in the Decrease state. Whenever valid estimates of these statistics are not available, we assume that we have not yet come close to convergence and therefore remain in the multiplicative increase state."
+    },
+    {
+      "indent": 3,
+      "text": "If R_hat(i) increases above three standard deviations of the average max bitrate, we assume that the current congestion level has changed, at which point we reset the average max bitrate and go back to the multiplicative increase state."
+    },
+    {
+      "indent": 3,
+      "text": "R_hat(i) is the incoming bitrate measured by the delay-based controller over a T seconds window:"
+    },
+    {
+      "indent": 5,
+      "text": "R_hat(i) = 1/T * sum(L(j)) for j from 1 to N(i)",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "N(i) is the number of packets received the past T seconds and L(j) is the payload size of packet j. A window between 0.5 and 1 second is RECOMMENDED."
+    },
+    {
+      "indent": 3,
+      "text": "During multiplicative increase, the estimate is increased by at most 8% per second."
+    },
+    {
+      "indent": 5,
+      "text": "eta = 1.08^min(time_since_last_update_ms / 1000, 1.0)\nA_hat(i) = eta * A_hat(i-1)",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "During the additive increase the estimate is increased with at most half a packet per response_time interval. The response_time interval is estimated as the round-trip time plus 100 ms as an estimate of over-use estimator and detector reaction time."
+    },
+    {
+      "indent": 4,
+      "text": "response_time_ms = 100 + rtt_ms\nalpha = 0.5 * min(time_since_last_update_ms / response_time_ms, 1.0)\nA_hat(i) = A_hat(i-1) + max(1000, alpha * expected_packet_size_bits)",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "expected_packet_size_bits is used to get a slightly slower slope for the additive increase at lower bitrates. It can for instance be computed from the current bitrate by assuming a frame rate of 30 frames per second:"
+    },
+    {
+      "indent": 5,
+      "text": "bits_per_frame = A_hat(i-1) / 30\npackets_per_frame = ceil(bits_per_frame / (1200 * 8))\navg_packet_size_bits = bits_per_frame / packets_per_frame",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "Since the system depends on over-using the channel to verify the current available bandwidth estimate, we must make sure that our estimate does not diverge from the rate at which the sender is actually sending. Thus, if the sender is unable to produce a bit stream with the bitrate the congestion controller is asking for, the available bandwidth estimate should stay within a given bound. Therefore we introduce a threshold"
+    },
+    {
+      "indent": 5,
+      "text": "A_hat(i) < 1.5 * R_hat(i)",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "When an over-use is detected the system transitions to the decrease state, where the delay-based available bandwidth estimate is decreased to a factor times the currently incoming bitrate."
+    },
+    {
+      "indent": 5,
+      "text": "A_hat(i) = beta * R_hat(i)",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "beta is typically chosen to be in the interval [0.8, 0.95], 0.85 is the RECOMMENDED value."
+    },
+    {
+      "indent": 3,
+      "text": "When the detector signals under-use to the rate control subsystem, we know that queues in the network path are being emptied, indicating that our available bandwidth estimate A_hat is lower than the actual available bandwidth. Upon that signal the rate control subsystem will enter the hold state, where the receive-side available bandwidth estimate will be held constant while waiting for the queues to stabilize at a lower level - a way of keeping the delay as low as possible. This decrease of delay is wanted, and expected, immediately after the estimate has been reduced due to over-use, but can also happen if the cross traffic over some links is reduced."
+    },
+    {
+      "indent": 3,
+      "text": "It is RECOMMENDED that the routine to update A_hat(i) is run at least once every response_time interval."
+    },
+    {
+      "indent": 0,
+      "text": "5.6. Parameters settings",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "+-----------------+-----------------------------------+-------------+\n| Parameter       | Description                       | RECOMMENDED |\n|                 |                                   | Value       |\n+-----------------+-----------------------------------+-------------+\n| burst_time      | Time limit in milliseconds        | 5 ms        |\n|                 | between packet bursts which       |             |\n|                 | identifies a group                |             |\n| q               | State noise covariance matrix     | q = 10^-3   |\n| e(0)            | Initial value of the  system      | e(0) = 0.1  |\n|                 | error covariance                  |             |\n| chi             | Coefficient used  for the         | [0.1,       |\n|                 | measured noise variance           | 0.001]      |\n| del_var_th(0)   | Initial value for the adaptive    | 12.5 ms     |\n|                 | threshold                         |             |\n| overuse_time_th | Time required to trigger an       | 10 ms       |\n|                 | overuse signal                    |             |\n| K_u             | Coefficient for the adaptive      | 0.01        |\n|                 | threshold                         |             |\n| K_d             | Coefficient for the adaptive      | 0.00018     |\n|                 | threshold                         |             |\n| T               | Time window for measuring the     | [0.5, 1] s  |\n|                 | received bitrate                  |             |\n| beta            | Decrease rate factor              | 0.85        |\n+-----------------+-----------------------------------+-------------+",
+      "raw": true
+    },
+    {
+      "indent": 10,
+      "text": "Table 1: RECOMMENDED values for delay based controller"
+    },
+    {
+      "indent": 34,
+      "text": "Table 1"
+    },
+    {
+      "indent": 0,
+      "text": "6. Loss-based control",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "A second part of the congestion controller bases its decisions on the round-trip time, packet loss and available bandwidth estimates A_hat received from the delay-based controller. The available bandwidth estimates computed by the loss-based controller are denoted with As_hat."
+    },
+    {
+      "indent": 3,
+      "text": "The available bandwidth estimates A_hat produced by the delay-based controller are only reliable when the size of the queues along the path sufficiently large. If the queues are very short, over-use will only be visible through packet losses, which are not used by the delay-based controller."
+    },
+    {
+      "indent": 3,
+      "text": "The loss-based controller SHOULD run every time feedback from the receiver is received."
+    },
+    {
+      "indent": 3,
+      "text": "o If 2-10% of the packets have been lost since the previous report from the receiver, the sender available bandwidth estimate As_hat(i) will be kept unchanged."
+    },
+    {
+      "indent": 3,
+      "text": "o If more than 10% of the packets have been lost a new estimate is calculated as As_hat(i) = As_hat(i-1)(1-0.5p), where p is the loss ratio."
+    },
+    {
+      "indent": 3,
+      "text": "o As long as less than 2% of the packets have been lost As_hat(i) will be increased as As_hat(i) = 1.05(As_hat(i-1))"
+    },
+    {
+      "indent": 3,
+      "text": "The loss-based estimate As_hat is compared with the delay-based estimate A_hat. The actual sending rate is set as the minimum between As_hat and A_hat."
+    },
+    {
+      "indent": 3,
+      "text": "We motivate the packet loss thresholds by noting that if the transmission channel has a small amount of packet loss due to over-use, that amount will soon increase if the sender does not adjust his bitrate. Therefore we will soon enough reach above the 10% threshold and adjust As_hat(i). However, if the packet loss ratio does not increase, the losses are probably not related to self-inflicted congestion and therefore we should not react on them."
+    },
+    {
+      "indent": 0,
+      "text": "7. Interoperability Considerations",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "In case a sender implementing these algorithms talks to a receiver which do not implement any of the proposed RTCP messages and RTP header extensions, it is suggested that the sender monitors RTCP receiver reports and uses the fraction of lost packets and the round-trip time as input to the loss-based controller. The delay-based controller should be left disabled."
+    },
+    {
+      "indent": 0,
+      "text": "8. Implementation Experience",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "This algorithm has been implemented in the open-source WebRTC project, has been in use in Chrome since M23, and is being used by Google Hangouts."
+    },
+    {
+      "indent": 3,
+      "text": "Deployment of the algorithm have revealed problems related to, e.g, congested or otherwise problematic WiFi networks, which have led to algorithm improvements. The algorithm has also been tested in a multi-party conference scenario with a conference server which terminates the congestion control between endpoints. This ensures that no assumptions are being made by the congestion control about maximum send and receive bitrates, etc., which typically is out of control for a conference server."
+    },
+    {
+      "indent": 0,
+      "text": "9. Further Work",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "This draft is offered as input to the congestion control discussion."
+    },
+    {
+      "indent": 3,
+      "text": "Work that can be done on this basis includes:"
+    },
+    {
+      "indent": 3,
+      "text": "o Considerations of integrated loss control: How loss and delay control can be better integrated, and the loss control improved."
+    },
+    {
+      "indent": 3,
+      "text": "o Considerations of locus of control: evaluate the performance of having all congestion control logic at the sender, compared to splitting logic between sender and receiver."
+    },
+    {
+      "indent": 3,
+      "text": "o Considerations of utilizing ECN as a signal for congestion estimation and link over-use detection."
+    },
+    {
+      "indent": 0,
+      "text": "10. IANA Considerations",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "This document makes no request of IANA."
+    },
+    {
+      "indent": 3,
+      "text": "Note to RFC Editor: this section may be removed on publication as an RFC."
+    },
+    {
+      "indent": 0,
+      "text": "11. Security Considerations",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "An attacker with the ability to insert or remove messages on the connection would have the ability to disrupt rate control. This could make the algorithm to produce either a sending rate under-utilizing the bottleneck link capacity, or a too high sending rate causing network congestion."
+    },
+    {
+      "indent": 3,
+      "text": "In this case, the control information is carried inside RTP, and can be protected against modification or message insertion using SRTP, just as for the media. Given that timestamps are carried in the RTP header, which is not encrypted, this is not protected against disclosure, but it seems hard to mount an attack based on timing information only."
+    },
+    {
+      "indent": 0,
+      "text": "12. Acknowledgements",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "Thanks to Randell Jesup, Magnus Westerlund, Varun Singh, Tim Panton, Soo-Hyun Choo, Jim Gettys, Ingemar Johansson, Michael Welzl and others for providing valuable feedback on earlier versions of this draft."
+    },
+    {
+      "indent": 0,
+      "text": "13. References",
+      "section_title": true
+    },
+    {
+      "indent": 0,
+      "text": "13.1. Normative References",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "[I-D.alvestrand-rmcat-remb] Alvestrand, H., \"RTCP message for Receiver Estimated Maximum Bitrate\", draft-alvestrand-rmcat-remb-03 (work in progress), October 2013."
+    },
+    {
+      "indent": 3,
+      "text": "[I-D.holmer-rmcat-transport-wide-cc-extensions] Holmer, S., Flodman, M., and E. Sprang, \"RTP Extensions for Transport-wide Congestion Control\", draft-holmer-rmcat-transport-wide-cc-extensions-00 (work in progress), March 2015."
+    },
+    {
+      "indent": 3,
+      "text": "[RFC2119] Bradner, S., \"Key words for use in RFCs to Indicate Requirement Levels\", BCP 14, RFC 2119, March 1997."
+    },
+    {
+      "indent": 3,
+      "text": "[RFC3550] Schulzrinne, H., Casner, S., Frederick, R., and V. Jacobson, \"RTP: A Transport Protocol for Real-Time Applications\", STD 64, RFC 3550, July 2003."
+    },
+    {
+      "indent": 3,
+      "text": "[abs-send-time] \"RTP Header Extension for Absolute Sender Time\", <http://www.webrtc.org/experiments/rtp-hdrext/ abs-send-time>."
+    },
+    {
+      "indent": 0,
+      "text": "13.2. Informative References",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "[Pv13] De Cicco, L., Carlucci, G., and S. Mascolo, \"Understanding the Dynamic Behaviour of the Google Congestion Control\", Packet Video Workshop , December 2013."
+    },
+    {
+      "indent": 3,
+      "text": "[RFC2914] Floyd, S., \"Congestion Control Principles\", BCP 41, RFC 2914, September 2000."
+    },
+    {
+      "indent": 0,
+      "text": "Appendix A. Change log",
+      "section_title": true
+    },
+    {
+      "indent": 0,
+      "text": "A.1. Version -00 to -01",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "o Added change log"
+    },
+    {
+      "indent": 3,
+      "text": "o Added appendix outlining new extensions"
+    },
+    {
+      "indent": 3,
+      "text": "o Added a section on when to send feedback to the end of section 3.3 \"Rate control\", and defined min/max FB intervals."
+    },
+    {
+      "indent": 3,
+      "text": "o Added size of over-bandwidth estimate usage to \"further work\" section."
+    },
+    {
+      "indent": 3,
+      "text": "o Added startup considerations to \"further work\" section."
+    },
+    {
+      "indent": 3,
+      "text": "o Added sender-delay considerations to \"further work\" section."
+    },
+    {
+      "indent": 3,
+      "text": "o Filled in acknowledgments section from mailing list discussion."
+    },
+    {
+      "indent": 0,
+      "text": "A.2. Version -01 to -02",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "o Defined the term \"frame\", incorporating the transmission time offset into its definition, and removed references to \"video frame\"."
+    },
+    {
+      "indent": 3,
+      "text": "o Referred to \"m(i)\" from the text to make the derivation clearer."
+    },
+    {
+      "indent": 3,
+      "text": "o Made it clearer that we modify our estimates of available bandwidth, and not the true available bandwidth."
+    },
+    {
+      "indent": 3,
+      "text": "o Removed the appendixes outlining new extensions, added pointers to REMB draft and RFC 5450."
+    },
+    {
+      "indent": 0,
+      "text": "A.3. Version -02 to -03",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "o Added a section on how to process multiple streams in a single estimator using RTP timestamps to NTP time conversion."
+    },
+    {
+      "indent": 3,
+      "text": "o Stated in introduction that the draft is aimed at the RMCAT working group."
+    },
+    {
+      "indent": 0,
+      "text": "A.4. rtcweb-03 to rmcat-00",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "Renamed draft to link the draft name to the RMCAT WG."
+    },
+    {
+      "indent": 0,
+      "text": "A.5. rmcat -00 to -01",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "Spellcheck. Otherwise no changes, this is a \"keepalive\" release."
+    },
+    {
+      "indent": 0,
+      "text": "A.6. rmcat -01 to -02",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "o Added Luca De Cicco and Saverio Mascolo as authors."
+    },
+    {
+      "indent": 3,
+      "text": "o Extended the \"Over-use detector\" section with new technical details on how to dynamically tune the offset del_var_th for improved fairness properties."
+    },
+    {
+      "indent": 3,
+      "text": "o Added reference to a paper analyzing the behavior of the proposed algorithm."
+    },
+    {
+      "indent": 0,
+      "text": "A.7. rmcat -02 to -03",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "o Swapped receiver-side/sender-side controller with delay-based/ loss-based controller as there is no longer a requirement to run the delay-based controller on the receiver-side."
+    },
+    {
+      "indent": 3,
+      "text": "o Removed the discussion about multiple streams and transmission time offsets."
+    },
+    {
+      "indent": 3,
+      "text": "o Introduced a new section about \"Feedback and extensions\"."
+    },
+    {
+      "indent": 3,
+      "text": "o Improvements to the threshold adaptation in the \"Over-use detector\" section."
+    },
+    {
+      "indent": 3,
+      "text": "o Swapped the previous MIMD rate control algorithm for a new AIMD rate control algorithm."
+    },
+    {
+      "indent": 0,
+      "text": "A.8. ietf-rmcat -00 to ietf-rmcat -01",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "o Arrival-time filter converted from a two dimensional Kalman filter to a scalar Kalman filter."
+    },
+    {
+      "indent": 3,
+      "text": "o The use of the TFRC equation was removed from the loss-based controller, as it turned out to have little to no effect in practice."
+    },
+    {
+      "indent": 0,
+      "text": "A.9. ietf-rmcat -01 to ietf-rmcat -02",
+      "section_title": true
+    },
+    {
+      "indent": 3,
+      "text": "o Added a section which better describes the pre-filtering algorithm."
+    },
+    {
+      "indent": 0,
+      "text": "Authors' Addresses"
+    },
+    {
+      "indent": 3,
+      "text": "Stefan Holmer Google Kungsbron 2 Stockholm 11122 Sweden"
+    },
+    {
+      "indent": 3,
+      "text": "Email: holmer@google.com Henrik Lundin\nGoogle\nKungsbron 2\nStockholm  11122\nSweden",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "Email: hlundin@google.com",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "Gaetano Carlucci Politecnico di Bari Via Orabona, 4 Bari 70125 Italy"
+    },
+    {
+      "indent": 3,
+      "text": "Email: gaetano.carlucci@poliba.it",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "Luca De Cicco Politecnico di Bari Via Orabona, 4 Bari 70125 Italy"
+    },
+    {
+      "indent": 3,
+      "text": "Email: l.decicco@poliba.it",
+      "raw": true
+    },
+    {
+      "indent": 3,
+      "text": "Saverio Mascolo Politecnico di Bari Via Orabona, 4 Bari 70125 Italy"
+    },
+    {
+      "indent": 3,
+      "text": "Email: mascolo@poliba.it",
+      "raw": true
+    }
+  ]
+}

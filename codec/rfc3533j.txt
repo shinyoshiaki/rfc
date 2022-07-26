@@ -1,0 +1,727 @@
+
+
+
+
+
+
+Network Working Group                                        S. Pfeiffer
+Request for Comments: 3533                                         CSIRO
+Category: Informational                                         May 2003
+
+
+                 Ogg カプセル化フォーマット バージョン0
+
+このメモの位置づけ
+
+   このメモはインターネットコミュニティに対する情報を提供する。
+   インターネット標準の類を規定するものではない。このメモの頒布に
+   制限はない。
+
+著作権表記
+
+   Copyright (C) The Internet Society (2003).  All Rights Reserved.
+
+概要
+
+   このドキュメントは、一般的で、自由に利用できる、メディアストリームの
+   ためのカプセル化フォーマット、Oggビットストリームフォーマット
+   バージョン0について記述する。これは任意の種類、任意の数の
+   ビデオ/オーディオエンコーディングフォーマットを一つのビットストリーム
+   に別のデータストリームがあるのと同じようにカプセル化することができる。
+
+Terminology
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+   document are to be interpreted as described in BCP 14, RFC 2119 [2].
+
+Table of Contents
+
+   1. Introduction . . . . . . . . . . . . . . . . . . . . . . . . .   2
+   2. Definitions  . . . . . . . . . . . . . . . . . . . . . . . . .   2
+   3. Requirements for a generic encapsulation format  . . . . . . .   3
+   4. The Ogg bitstream format . . . . . . . . . . . . . . . . . . .   3
+   5. The encapsulation process  . . . . . . . . . . . . . . . . . .   6
+   6. The Ogg page format  . . . . . . . . . . . . . . . . . . . . .   9
+   7. Security Considerations  . . . . . . . . . . . . . . . . . . .  11
+   8. References . . . . . . . . . . . . . . . . . . . . . . . . . .  12
+   A. Glossary of terms and abbreviations  . . . . . . . . . . . . .  13
+   B. Acknowledgements . . . . . . . . . . . . . . . . . . . . . . .  14
+      Author's Address . . . . . . . . . . . . . . . . . . . . . . .  14
+      Full Copyright Statement . . . . . . . . . . . . . . . . . . .  15
+
+
+
+
+1. 導入
+
+   Oggビットストリームフォーマットは、インターネットコミュニティを含めた
+   コンピューティングコミュニティ全体に対するソフトウェアとハードウェア
+   の両面で、自由に利用でき、自由に再実装できるマルチメディアコンテンツ
+   の符号化と復号化(コーデック)のためのコンポーネントのセットを作り出す
+   ことを目指した、より大きなプロジェクトの一部として開発された。
+   知的財産の心配をせずにこれを利用できることがXiph.Orgに代表される
+   Ogg開発者たちの意図である。
+
+   このドキュメントはOggビットストリームフォーマットと、一つ以上の
+   エンコーダーによって生成された一つ以上のメディアビットストリームを
+   カプセル化するためのそれの使い方を記述する。Oggトランスポートビット
+   ストリームは、Vorbisオーディオコーデックや来るべきTarkinやTheora
+   ビデオコーデックのような、生のカプセル化されていないデータパケットで
+   構成されるより高レベルなコーデックストリームに対し、フレーム処理、
+   エラー保護、構造の探査を提供するためにデザインされている。
+   それは異なるバイナリメディアや、データパケットのシーケンスとして
+   エンコーダによって表現される他の連続時間データストリームを
+   インタリーブすることができる。Oggはデータブロックをそのような
+   エンコーダーによって生成されたデータパケットへと、デコーディングに
+   頼ることなくパケット境界を見つけ、元のパケット境界で正確に分割する
+   ための十分な情報を提供する。
+
+   MIMEタイプapplication/oggがIANA [1]によって登録されていることに
+   注意していただきたい。
+
+2. 定義
+
+   Oggカプセル化のプロセスを記述するため、意味を理解する必要のある一連
+   の用語が使われる。そのため、汎用のメディアストリームカプセル化
+   フォーマットやカプセル化のプロセス、Ogg微意とストリームの具体的な
+   フォーマットに対する要件の記述を開始する前に、最も基本的な用語の
+   いくつかがここで定義される。より完全な用語集に関しては付録を参照せよ。
+
+   Oggカプセル化の結果は「物理 (Ogg) ビットストリーム」と呼ばれる。
+   これは一つ以上のエンコーダーにより生成されたビットストリーム
+   (「論理ビットストリーム」と呼ばれる)をカプセル化する。論理
+   ビットストリーム(これはOggカプセル化の過程で提供される)は構造を持つ。
+   すなわち、それはいわゆる「パケット」のシーケンスへと分離される。
+   これらのパケットは論理ビットストリームのエンコーダーによって
+   生成され、そのエンコーダーに対してだけ意味を持つエンティティを表現する。
+   (すなわち、圧縮解除されたストリームはパケットとしてビデオフレームを
+   使用するかもしれない。)これらは境界情報を含んでいない。それらは
+   互いに結びついており、境界標識もなくランダムなバイトのストリーム
+   であるかのように見える。
+
+   このドキュメントでは「パケット」という用語がネットワークを越えて
+   伝達されるエンティティを示すために使用されないことに注意して
+   いただきたい。
+
+3. 汎用カプセル化フォーマットに対する要件
+
+   Oggの背景にあるデザインのアイデアは、メディアデータのエンコーディング
+   フォーマットに依存しない、一つ以上のインタリーブされたメディア
+   ストリームのファイルに基づくストレージとストリームに基づく伝達の
+   両方を可能にするための、汎用かつ線形なメディア伝達フォーマットを
+   提供することである。そのようなカプセル化フォーマットは次のような
+   機能を提供する必要がある。
+
+   ・ 論理ビットストリームのフレーム処理
+
+   ・ 異なる論理ビットストリームのインタリーブ処理
+
+   ・ 衝突の検出
+
+   ・ パースエラー後の再キャプチャ
+
+   ・ ビットストリーム中の任意の位置へ直接ランダムアクセスするための
+      位置境界標識
+
+   ・ ストリーミング能力 (すなわち、100%完全なビットストリームを
+      構築するのにシーク処理を必要としない)
+
+   ・ オーバーヘッドの小ささ (すなわち、パケット境界のマーキングや
+      高レベルフレーム処理、同期、シークにビットストリーム帯域の
+      約1～2%以上を使用しないこと)
+
+   ・ 高速なパースが可能な単純さ
+
+   ・ 複数の物理ビットストリームを容易に連結することのできる仕組み
+
+   これらのデザインについての考察はすべてOggに対する考察に導入されて
+   いる。Oggは論理ビットストリームのフレーム処理やインタリーブ処理、
+   境界標識のシーク、衝突の検出、パースエラー後のストリームの再同期を
+   約1～2%以上オーバヘッドなしにサポートする。それは連続時間ビット
+   ストリームのカプセル化を行うための汎用のフレームワークである。
+   それはカプセル化されるコーデックデータに関するいかなる規定にも
+   感知せず、よっていかなるメディアコーデックにも依存しない。
+
+4. Oggビットストリームフォーマット
+
+   物理Oggビットストリームは、いわゆる「ページ」にインタリーブされた
+   多数の論理ビットストリームから構成される。ページ全体が順にページ
+   レベルで多重化された多数の論理ビットストリームから取得される。
+   論理ビットストリームは、物理ビットストリームの各ページのヘッダ中
+   にある一意なシリアル番号で識別される。この一意なシリアル番号は
+   ランダムに生成され、その内容やそれを表現する論理ビットストリームの
+   エンコーダーと全く関係がない。全ての論理ビットストリームのページは
+   同時にインタリーブされているが、規則的な順序は必要としない。
+   それらは論理ビットストリーム内で連続していることを要求される
+   だけである。Oggの分離化は、物理ビットストリームからページを順に
+   受け取り、それらを適切な論理デコーディングエンティティへリダイレクト
+   することによって、物理ビットストリームから元の論理ビット
+   ストリームを再構築する。
+
+   各Oggページは、一つの論理ビットストリームだけに属するように、
+   一種類だけのデータを含んでいる。ページは可変サイズで、カプセル化と
+   エラー回復のための情報を含んだページヘッダを持つ。物理Oggビット
+   ストリーム中の各論理ビットストリームは特別な開始ページ
+   (bos=beginning of stream)で始まり、特別なページ(eos=end of stream)
+   で終了する。
+
+   bosページは、コーデックの種類を一意に識別するための情報を含んでおり、
+   デコーディング過程を準備するための情報を含んでいてもよい(MAY)。
+   bosページはまたエンコードされたメディアに関する情報(例えば、
+   オーディオデータに対してはサンプルレートとチャンネル数)を含んでいる
+   べきである(SHOULD)。慣習的に、bosページの最初の数バイトは要求される
+   コーデックを一意に識別するマジックデータを含んでいる。彼/彼女の
+   コーデックを既に使われている他の全てのコーデックと明確に区別する
+   ことができることを確かにすることは新しいコーデックに対応する全ての
+   人の責任である。コーデックを識別するマーカーの終端を検出する
+   決まった方法はない。bosページのフォーマットはコーデックに依存する。
+   つまり、論理ビットストリームの種別におけるカプセル化仕様で
+   与えられなけれなならない(MUST)。Oggはまたbosページの後で論理
+   ビットストリームに対する第二のヘッダパケットを許可しているが
+   要求はしない。これらは任意の論理ストリーム中のいかなるデータ
+   パケットよりも前に現れなければならない。これらの後続するパケットは
+   必要な数のページへフレーム化される。これらのページはいかなるデータ
+   パケットも含まない。よって、物理ビットストリームは、全ての論理
+   ビットストリームのbosページ(ページ毎に一つの初期ヘッダパケットを含む)
+   で開始し、全てのストリームの補助ヘッダパケットが続き、データパケット
+   を含んだページが続く。
+
+   一つ以上の論理ビットストリームに対するこのカプセル化仕様は
+   「メディアマッピング」と呼ばれる。メディアマッピングの例の一つは
+   「Ogg Vorbis」であり、これはVorbisエンコードされたオーディオデータを
+   ストリームに基づくストレージ(ファイル等)と伝達(TCPストリーム、
+   パイプ等)に対しカプセル化するためにOggフレームワークを利用する。
+   Ogg VorbisはVorbisコーデックの名前とリビジョン、オーディオレート、
+   オーディオ品質をOgg Vorbis bosページで提供する。また、論理ビット
+   ストリーム毎に二つの追加ヘッダページも利用する。Ogg Vorbis bos
+   ページは0x01というバイトで始まり、「vorbis」が続く。(計7バイトの識別子)
+
+   Oggは二種類の多重化を認識する。それは同時多重化(いわゆる
+   「グループ化」)と逐次多重化(いわゆる「チェイン化」)である。
+   グループ化は複数の論理ビットストリームを同じ物理ビットストリーム内で
+   ページのようにインタリーブする方法を定義する。例えば、グループ化は
+   異なるコーデックを異なる論理ストリームで利用するいくつかの同期した
+   オーディオトラックを伴うビデオストリームをインタリーブするのに
+   必要である。一方、チェイン化は物理Oggビットストリームの連結のための
+   簡潔な機構を提供するために定義され、同様にストリーミング
+   アプリケーションに必要とされることがある。
+
+   グループ化では、全ての論理ビットストリームの全てのbosページが
+   Oggビットストリームの先頭にまとめて現れなければならない(MUST)。
+   メディアマッピングは初期ページの順序を規定する。例えば、特定の
+   OggビデオとOggオーディオビットストリームのグループ化は、物理
+   ビットストリームが論理ビデオビットストリームのbosページで始まり、
+   オーディオビットストリームのbosが続かなければならない(MUST)こと
+   を規定する。bosページと違い、そのような論理ビットストリームの
+   eosページは全て連続して現れる必要がない。eosページは「無」の
+   ページ、つまり内容を含まないが位置情報を持ち、ページヘッダ中の
+   eosフラグがセットされたようなページヘッダを含むだけのページで
+   あってもよい。グループ化された各論理ビットストリームは、その
+   物理ビットストリームの範囲内で一意なシリアル番号を持たなければ
+   ならない(MUST)。
+
+   チェイン化では、完全な論理ビットストリームが連結される。ビット
+   ストリームは重なり合うことがない。つまり、与えられた論理ビット
+   ストリームのeosページの直後に次の論理ビットストリームのbosページ
+   が続く。チェイン化された各論理ビットストリームは、その物理ビット
+   ストリームの範囲内で一意なシリアル番号を持たなければならない(MUST)。
+
+   同時多重化されたビットストリームのグループを逐次チェイン化する
+   ことができる。そのようなグループは、チェインを解除した際、
+   それ自身で有効な同時多重化されたビットストリームになって
+   いなければならない(MUST)。次の図は、グループ化とチェイン化の
+   両方で多重化されたビットストリームの全ての規則に従うような物理
+   ビットストリームの概略の例を示している。
+
+               physical bitstream with pages of
+          different logical bitstreams grouped and chained
+      -------------------------------------------------------------
+      |*A*|*B*|*C*|A|A|C|B|A|B|#A#|C|...|B|C|#B#|#C#|*D*|D|...|#D#|
+      -------------------------------------------------------------
+       bos bos bos             eos           eos eos bos       eos
+
+   この例では、二つのチェイン化された物理ビットストリームがあり、
+   そのうち最初のものは三つの論理ビットストリームA、B、Cのグループ化
+   されたストリームである。二つ目の物理ビットストリームは、その
+   グループ化されたビットストリーム(グループ化された全ての論理ビット
+   ストリームの最後のeosページの後ろで終わる)の終端の後ろにチェイン化
+   される。見ての通り、グループ化されたビットストリームは一緒に始まる。
+   つまり、全てのbosページはあらゆるデータページより前に現れなければ
+   ならない。同時多重化されたビットストリームのページは一定の規則に
+   従う必要がないことも見て取れる。そして、グループ化されたビット
+   ストリームが、グループの終端で終わる他のビットストリームより
+   ずっと前で終了し得ることも分かる。
+
+   Oggは、各ビットストリームが異なるコーデックに属すること、
+   コーデックからのデータがそのままの順序で出現すること、位置マーカー
+   (いわゆる「グラニュー位置」)を持つことを除いて、コーデックデータに
+   関する規定には関知しない。Oggは「時間」の概念を持たない。それは
+   連続して増加する単位のない位置マーカーについてのみ知っている。
+   アプリケーションは、グラニュー位置や時間を指定したり変換するための
+   コーデックAPIへのアクセスを持ったより高いレイヤーを通して、
+   時間的な情報を取得できるだけである。
+
+   Oggを利用したメディアマッピングの特定の定義は、Oggビットストリーム
+   の特定の利用に関してそれ以上の制約を加えても良い。例えば、特定の
+   メディアマッピングは、全てのグループ化されたストリームに対する
+   全てのeosページが隣接して出現しなければならないと要求するかも
+   しれない。メディアマッピングに対する例は「Ogg Vorbis」の仕様である。
+   もう一つの例は来るべき「Ogg Theora」仕様であり、これはTheora
+   エンコードされたビデオデータをカプセル化し、通常、同期された
+   オーディオとビデオを含むOggのためにVorbisストリームと多重化される。
+   Oggはカプセル化され同時多重化されたビットストリーム間の時間的な
+   関係を規定しないので、オーディオとビデオのストリームの間の
+   時間的な同期はこのメディアマッピングで規定されるだろう。
+   ストリーミングを可能にするため、様々な論理ビットストリームからの
+   ページが典型的には時系列順にインタリーブされる。
+
+5. カプセル化の過程
+
+   異なる論理ビットストリームを多重化する過程は、前述の通りページの
+   レベルで発生する。しかしながら、エンコーダーによって提供される
+   ビットストリームはOggを超えていわゆる「パケット」(エンコーディング
+   フォーマット依存のパケット境界を持つ)として扱われる。パケットを
+   ページへとカプセル化する過程はこれから記述されるだろう。
+
+   Oggの観点では、パケットはあらゆる任意のサイズを取ることができる。
+   特定のメディアマッピングは特定のメディアエンコーダーからのパケットを
+   グループ化したり分割する方法を定義するだろう。Oggページは約64キロ
+   バイトの最大サイズを持つので、一つのパケットが複数のページに渡って
+   分配されることがある。そのような過程を単純にするため、Oggは
+   各パケットを255バイト長のチャンクをいくつかと最後のより短いチャンク
+   に分割する。これらのチャンクは「Oggセグメント」と呼ばれる。これらは
+   論理上の概念でしかなく、それ自身に対するヘッダは持たない。
+
+
+   連続したセグメントのグループはヘッダに先行される可変長のページへと
+   ラップされる。ページヘッダ中のセグメントテーブルは、ページに含まれる
+   セグメントの「レーシング値」(サイズ)を示している。ページヘッダ中の
+   フラグは、そのページが直前のページから継続しているパケットを含んで
+   いるかどうか示している。255というレーシング値は二番目のレーシング値
+   がパケット中に続くことを意味し、255未満の値は多くの追加バイトの後の
+   パケットの終端を示していることに注意すること。255バイト(または255の
+   倍数バイト)のパケットは、0というレーシング値で終了する。「空」
+   (長さ0の)パケットはエラーではないことにも注意すること。これは
+   ヘッダ中の0というレーシング値以外の何物でも構成されていない。
+
+   エンコーディングは、速度と50～200バイトの大きさの大多数のパケットに
+   想定されるケースに対して最適化されていいる。これは勧告というより
+   むしろデザインの正当化である。このエンコーディングは共に小さな
+   パケットに最小のオーバーヘッドを課すことに加え、最大パケットサイズを
+   課すことを回避する。対照的に、例えばパケット毎にの先頭で2バイトを
+   単純に利用して、32キロバイトの最大パケットサイズを持つことは、
+   小さな(典型的には255バイト未満の)パケットに対してセグメンテーション
+   のオーバーヘッドが二倍になることで常にペナルティーを課すことになる。
+   提案通りレーシング値を使うことで、小さなパケットが可能な限り最小の
+   バイト整列オーバーヘッド(1バイト)を経験し、大きな(512バイト超の)
+   パケットはエンコーディング空間の全く一定の～0.5%のオーバーヘッドを
+   経験する。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   次の図は、Oggとグループ化された論理ビットストリームを使ったメディア
+   マッピングの概略図の例である。
+
+          logical bitstream with packet boundaries
+ -----------------------------------------------------------------
+ > |       packet_1             | packet_2         | packet_3 |  <
+ -----------------------------------------------------------------
+
+                     |segmentation (logically only)
+                     v
+
+      packet_1 (5 segments)          packet_2 (4 segs)    p_3 (2 segs)
+     ------------------------------ -------------------- ------------
+ ..  |seg_1|seg_2|seg_3|seg_4|s_5 | |seg_1|seg_2|seg_3|| |seg_1|s_2 | ..
+     ------------------------------ -------------------- ------------
+
+                     | page encapsulation
+                     v
+
+ page_1 (packet_1 data)   page_2 (pket_1 data)   page_3 (packet_2 data)
+------------------------  ----------------  ------------------------
+|H|------------------- |  |H|----------- |  |H|------------------- |
+|D||seg_1|seg_2|seg_3| |  |D|seg_4|s_5 | |  |D||seg_1|seg_2|seg_3| | ...
+|R|------------------- |  |R|----------- |  |R|------------------- |
+------------------------  ----------------  ------------------------
+
+                    |
+pages of            |
+other    --------|  |
+logical         -------
+bitstreams      | MUX |
+                -------
+                   |
+                   v
+
+              page_1  page_2          page_3
+      ------  ------  -------  -----  -------
+ ...  ||   |  ||   |  ||    |  ||  |  ||    |  ...
+      ------  ------  -------  -----  -------
+              physical Ogg bitstream
+
+   この例で我々はある論理ビットストリームのカプセル化過程の
+   スナップショットを考える。我々はコーデックに提供されるように
+   ビットストリームのパケットへの細区分の一部を見ることができる。
+   Oggカプセル化過程はパケットをセグメントへと分割する。この例の
+   パケットはpacket_1が５つのセグメント(255バイトの4セグメントと
+   最後のより小さいもの)に分割されるなど比較的大きい。packet_2は
+   4セグメント(255バイトの3セグメントと最後の非常に小さいもの)に、
+   packet_3は2セグメントに分割される。それからカプセル化の過程は
+   ページを生成する。この例ではこれは非常に小さい。page_1はpacket_1の
+   最初の3セグメントで構成され、page_2は残りの2セグメントで構成され、
+   page_3はpacket_2の最初の3セグメントで構成される。最後に、この論理
+   ビットストリームは他の論理ビットストリームのページと共に物理Ogg
+   ビットストリームへと多重化される。
+
+6. Oggページフォーマット
+
+   物理Oggビットストリームは連結されたページのシーケンスで構成される。
+   ページは可変サイズで、通常4～8キロバイト、最大で65307バイトになる。
+   ページヘッダは、物理ビットストリームから論理ビットストリームを
+   多重化解除するため、および基本的なエラー回復とシーク用の標識として
+   機能するために必要とされる全ての情報を含んでいる。各ページは、
+   ビットストリーム全体を要求することなくページデコード機構が
+   単一のページを同時に解釈、検証、処理できるような、自己完結型の
+   エンティティである
+
+   Oggページヘッダは次のようなフォーマットを持つ。
+
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1| Byte
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+| capture_pattern: Magic number for page start "OggS"           | 0-3
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+| version       | header_type   | granule_position              | 4-7
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               | 8-11
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                               | bitstream_serial_number       | 12-15
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                               | page_sequence_number          | 16-19
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                               | CRC_checksum                  | 20-23
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                               |page_segments  | segment_table | 24-27
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+| ...                                                           | 28-
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+   LSb(最下位ビット)はバイト列の先頭に位置する。1バイト長を超える
+   フィールドはLSB(最下位バイト)が最初に現れるようにエンコードされる。
+
+
+
+
+   ページヘッダ中のフィールドは次のような意味を持つ。
+
+   1. capture_pattern: ページの先頭を示す4バイトのフィールド。
+      次のマジックナンバーを含む。
+
+            0x4f 'O'
+
+            0x67 'g'
+
+            0x67 'g'
+
+            0x53 'S'
+
+      これはデコーダがページ境界を発見し、衝突したストリームを
+      パースした後に同期を取り戻すのに役立つ。一旦キャプチャパターン
+      が発見されると、デコーダはチェックサムの計算と比較によって
+      ページの同期と一貫性を検証する。
+
+   2. stream_structure_version: このストリームで使用されるOggファイル
+      フォーマットのバージョン番号を示す1バイト。(このドキュメントは
+      バージョン0を規定する)
+
+   3. header_type_flag: この1バイトフィールド中の各ビットは、
+      このページが特定のタイプであることを示している。
+
+      *  bit 0x01
+
+         set: ページは以前のページから継続するパケットのデータを
+            含んでいる
+
+         unset: ページは新たなパケットを含んでいる
+
+      *  bit 0x02
+
+         set: これは論理ビットストリームの最初のページ(bos)である
+
+         unset: このページは最初のページではない
+
+      *  bit 0x04
+
+         set: これは論理ビットストリームの最後のページ(eos)である
+
+         unset: このページは最後のページではない
+
+   4. granule_position: 位置情報を含む8バイトフィールド。例えば、
+      オーディオストリームに対しては、このページで完了した全ての
+      フレームを含んだ後半でエンコードされたPCMサンプル数の総数を
+      含んでいるかもしれない(MAY)。ビデオストリームに対しては、
+      このページの後半でエンコードされたビデオフレームの総数を含んで
+      いるかもしれない(MAY)。これはデコーダに対するヒントであり、
+      時間と位置の情報をいくらか与える。この意味は論理ビットストリーム
+      に対するコーデックに依存し、特定のメディアマッピングで規定される。
+      特別な値-1(2の補数)は、このページで完了するパケットが存在しない
+      ことを示す。
+
+   5. bitstream_serial_number: 論理ビットストリームを識別する、一意な
+      シリアル番号を含む4バイトのフィールド。
+
+   6. page_sequence_number: デコーダがページ欠損を識別できるように
+      するためのページのシーケンス番号を含む4バイトのフィールド。
+      このシーケンス番号は各論理ビットストリームで独立して増加される。
+
+   7. CRC_checksum: ページ(CRCのフィールドを0にしたヘッダとページの内容
+      を含む)の32ビットCRCチェックサムを含む4バイトのフィールド。
+      生成多項式は0x04c11db7である。
+
+   8. number_page_segments: セグメントテーブル内にエンコードされる
+      セグメントエンティティの数を与える1バイト。
+
+   9. segment_table: このページの全てのセグメントのレーシング値を
+      含むnumber_page_segmentsバイト。各バイトは一つのレーシング値を
+      含んでいる。
+
+   トータルヘッダサイズのバイト数は次で与えられる:
+   header_size = number_page_segments + 27 [Byte]
+
+   トータルページサイズのバイト数は次で与えられる:
+   page_size = header_size + sum(lacing_values: 1..number_page_segments)
+   [Byte]
+
+7. セキュリティについての考察
+
+   Oggカプセル化フォーマットはコンテナフォーマットであり、(Vorbis
+   エンコードされたオーディオのような)コンテンツをカプセルするだけ
+   である。これは自身やそれに含まれるコンテンツのビットストリームに
+   対して如何なる汎用暗号化も署名も提供しない。しかしながら、コーデック
+   が存在する限り如何なる種類のコンテンツビットストリームもカプセル化
+   する。従って、暗号化や署名のされたコンテンツデータを含めることが
+   できる。また、Ogg物理ストリームを暗号化や署名を行い、それによって
+   コンテンツに機密性と信憑性を与えるような外部のセキュリティ機構を
+   追加することも可能である。
+
+   Oggはバイナリデータをカプセル化するため、Oggビットストリームに
+   実行可能なコンテンツを含めることが出来る。Oggフォーマットを使うように
+   実装されたアプリケーションについて、特にOggがネットワークのシナリオの
+   中でストリーミングやファイル転送に使われるときに問題となることがある。
+   そうであっても、Oggはそこでは脅威とならない。しかしながら、Oggと
+   それにカプセル化されたコンテンツビットストリームをデコードする
+   アプリケーションは、操作されるビットストリームやバッファオーバー
+   フローやそれに類するものの正しい扱いを保障しなければならない。
+
+8. References
+
+   [1] Walleij, L., "The application/ogg Media Type", RFC 3534, May
+       2003.
+
+   [2] Bradner, S., "Key words for use in RFCs to Indicate Requirement
+       Levels", BCP 14, RFC 2119, March 1997.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Appendix A. Glossary of terms and abbreviations
+
+   bos page: The initial page (beginning of stream) of a logical
+      bitstream which contains information to identify the codec type
+      and other decoding-relevant information.
+
+   chaining (or sequential multiplexing): Concatenation of two or more
+      complete physical Ogg bitstreams.
+
+   eos page: The final page (end of stream) of a logical bitstream.
+
+   granule position: An increasing position number for a specific
+      logical bitstream stored in the page header.  Its meaning is
+      dependent on the codec for that logical bitstream and specified in
+      a specific media mapping.
+
+   grouping (or concurrent multiplexing): Interleaving of pages of
+      several logical bitstreams into one complete physical Ogg
+      bitstream under the restriction that all bos pages of all grouped
+      logical bitstreams MUST appear before any data pages.
+
+   lacing value: An entry in the segment table of a page header
+      representing the size of the related segment.
+
+   logical bitstream: A sequence of bits being the result of an encoded
+      media stream.
+
+   media mapping: A specific use of the Ogg encapsulation format
+      together with a specific (set of) codec(s).
+
+   (Ogg) packet: A subpart of a logical bitstream that is created by the
+      encoder for that bitstream and represents a meaningful entity for
+      the encoder, but only a sequence of bits to the Ogg encapsulation.
+
+   (Ogg) page: A physical bitstream consists of a sequence of Ogg pages
+      containing data of one logical bitstream only.  It usually
+      contains a group of contiguous segments of one packet only, but
+      sometimes packets are too large and need to be split over several
+      pages.
+
+   physical (Ogg) bitstream: The sequence of bits resulting from an Ogg
+      encapsulation of one or several logical bitstreams.  It consists
+      of a sequence of pages from the logical bitstreams with the
+      restriction that the pages of one logical bitstream MUST come in
+      their correct temporal order.
+
+
+
+   (Ogg) segment: The Ogg encapsulation process splits each packet into
+      chunks of 255 bytes plus a last fractional chunk of less than 255
+      bytes.  These chunks are called segments.
+
+Appendix B. Acknowledgements
+
+   The author gratefully acknowledges the work that Christopher
+   Montgomery  and the Xiph.Org foundation have done in defining the Ogg
+   multimedia project and as part of it the open file format described
+   in this document.  The author hopes that providing this document to
+   the Internet community will help in promoting the Ogg multimedia
+   project at http://www.xiph.org/.  Many thanks also for the many
+   technical and typo corrections that C. Montgomery and the Ogg
+   community provided as feedback to this RFC.
+
+Author's Address
+
+   Silvia Pfeiffer
+   CSIRO, Australia
+   Locked Bag 17
+   North Ryde, NSW  2113
+   Australia
+
+   Phone: +61 2 9325 3141
+   EMail: Silvia.Pfeiffer@csiro.au
+   URI:   http://www.cmis.csiro.au/Silvia.Pfeiffer/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Full Copyright Statement
+
+   Copyright (C) The Internet Society (2003).  All Rights Reserved.
+
+   This document and translations of it may be copied and furnished to
+   others, and derivative works that comment on or otherwise explain it
+   or assist in its implementation may be prepared, copied, published
+   and distributed, in whole or in part, without restriction of any
+   kind, provided that the above copyright notice and this paragraph are
+   included on all such copies and derivative works.  However, this
+   document itself may not be modified in any way, such as by removing
+   the copyright notice or references to the Internet Society or other
+   Internet organizations, except as needed for the purpose of
+   developing Internet standards in which case the procedures for
+   copyrights defined in the Internet Standards process must be
+   followed, or as required to translate it into languages other than
+   English.
+
+   The limited permissions granted above are perpetual and will not be
+   revoked by the Internet Society or its successors or assigns.
+
+   This document and the information contained herein is provided on an
+   "AS IS" basis and THE INTERNET SOCIETY AND THE INTERNET ENGINEERING
+   TASK FORCE DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING
+   BUT NOT LIMITED TO ANY WARRANTY THAT THE USE OF THE INFORMATION
+   HEREIN WILL NOT INFRINGE ANY RIGHTS OR ANY IMPLIED WARRANTIES OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+
+Acknowledgement
+
+   Funding for the RFC Editor function is currently provided by the
+   Internet Society.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Japanese Translation Copyright (c) 2007 Takeshi Mouri

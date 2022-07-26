@@ -1,0 +1,339 @@
+# Matroska / WebMでのAOMAV1コーデックマッピング
+
+このドキュメントでは、[Matroska]（# matroska-specifications）ビデオトラックの[AV1]（# av1-specifications）ビットストリームのストレージ形式を指定します。[Matroska]（# referenced-documents）が言及されるたびに、[WebM]（# webm-container）にも同様に適用されます。
+
+角括弧内のこのドキュメントの要素__ [] __は、[AV1仕様]（# av1-仕様）で定義されている要素を指します。
+
+
+#  条項
+
+## ブロック
+フレームを格納するMatroska要素。`BlockGroup`内にない場合は、` SimpleBlock`にすることもできます。このドキュメントで「ブロック」を使用すると、両方の形式のブロックを意味します。
+
+## CodecID
+Matroskaでコーデックを説明するために使用される名前。
+
+## CVS
+コード化されたビデオシーケンスは `Temporal Units`のシーケンスであり、__ [sequence_header_obu] __の内容は、__ [operating_parameters_info]の内容を除いて、Matroskaカプセル化の前のシーケンスで見つかったすべての` SequenceヘッダーOBU`に対してビット同一である必要があります。 __。CVS内のすべての同一ビットで構成される「シーケンスヘッダーOBU」は、「CVSシーケンスヘッダーOBU」と呼ばれます。
+
+## CodecPrivate
+Matroskaに追加のデータストアがあり、デコードが開始される前にデコーダーに渡されます。また、コーデックをより適切に識別するために、プロファイルやその他のデータを保存するために使用することもできます。
+
+## OBU
+オープンビットストリームユニットは、AV1のデータの基本ユニットです。ヘッダーとペイロードが含まれています。
+
+##セグメント
+インターリーブされたオーディオ、ビデオ、字幕、トラックの説明、チャプター、タグなどを含む最上位のMatroska要素。通常、Matroskaファイルは1つのセグメントで構成されます。
+
+## 時間単位
+ある時間的瞬間に関連付けられた全てのOBU。Temporal Delimiter OBUと、それに続く次のTemporal Delimiter OBUまでのすべてのOBUで構成される。複数のフレームを含んでもよいが、提示されるのは 1 つだけである。
+
+
+# 必須のTrackEntry要素
+
+## CodecID 
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ CodecID` | 必須：はい
+
+`CodecID` **はASCII文字列` V_AV1`である必要があります。
+
+## CodecPrivate
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ CodecPrivate` | 必須：はい
+
+`CodecPrivate`は、[ISOBMFF]（# isobmff-av1-mapping）` AV1CodecConfigurationBox`の最初の4オクテットと同様の4オクテットで構成されています。このビットフィールドの値のほとんどは、 `CVSシーケンスヘッダーOBU`から取得されます。ビットは次のように拡散され、最上位ビットが最初になります。
+
+`` `c
+unsigned int（1）マーカーは常に1
+unsigned int（7）バージョンは現在1
+
+unsigned int（3）seq_profile
+unsigned int（5）seq_level_idx_0
+
+unsigned int（1）seq_tier_0
+unsigned int（1）high_bitdepth
+unsigned int（1）twelve_bit
+unsigned int（1）モノクロ
+unsigned int（1）chroma_subsampling_x
+unsigned int（1）chroma_subsampling_y
+unsigned int（2）chroma_sample_position
+
+unsigned int（3）現在予約済み0
+unsigned int（1）initial_presentation_delay_present
+unsigned int（4）initial_presentation_delay_minus_one
+`` `
+
+* `seq_profile`は、` CVSシーケンスヘッダーOBU`の__ [seq_profile] __に対応します。
+* `seq_level_idx_0`は、` CVSシーケンスヘッダーOBU`の__ [seq_level_idx [0]] __に対応します。
+* `seq_tier_0`は、` CVSシーケンスヘッダーOBU`の__ [seq_tier [0]] __に対応します。
+* `twelve_bit`は、` CVSシーケンスヘッダーOBU`の__ [twelve_bit] __に対応し、存在しない場合は0に対応します。
+* `monochrome`は、` CVSシーケンスヘッダーOBU`の__ [mono_chrome] __に対応します。
+* `chroma_subsampling_x`は、` CVSシーケンスヘッダーOBU`の__ [subsampling_x] __に対応します。
+* `chroma_subsampling_y`は、` CVSシーケンスヘッダーOBU`の__ [subsampling_y] __に対応します。
+* `chroma_sample_position`は、` CVSシーケンスヘッダーOBU`の__ [chroma_sample_position] __に対応し、定義されていない場合は0（CSP_UNKNOWN）に対応します。
+
+`initial_presentation_delay_minus_one`フィールドは、最初のフレームの表示を開始する前にデコードする必要があるフレームの数（マイナス1）を示します。これにより、各フレームは、の` seq_level_idx_0`で示される制約の下で表示時間の前にデコードされます。 `CodecPrivate`。より正確には、次の手順はエラーを返さないでください**。
+-フレームで伝送されるOBUと、それに続くそのフレームを参照するすべてのフレームで伝送されるOBUで構成される架空のビットストリームを構築します。
+-各 `Sequence Header OBU`について、__ [initial_display_delay_minus_1 [0]] __を、表示できないフレームを含む最初の（` initial_presentation_delay_minus_one` + 1） `Blocks`に含まれるフレーム数から1を引いた数に設定します。
+-各提示可能フレームの__ [frame_header_obu] __の__ [frame_presentation_time] __フィールドを、このフレームを含むフレームと前のフレーム（存在する場合は0）との提示時間差と一致するように設定します。
+-[AV1]（# av1-specifications）で指定されたデコーダーモデルを、最初の動作点を使用してこの架空のビットストリームに適用します。__ [buffer_removal_time] __情報がこの動作点のビットストリームに存在する場合は、デコードスケジュールモード** [MUST **]を適用する必要があります。それ以外の場合は、リソース可用性モード** [MUST **]を適用する必要があります。
+
+マルチプレクサが上記の手順を検証できない場合は、 `initial_presentation_delay_present` ** SHOULD **を0に設定する必要があります。
+
+__ [initial_display_delay_minus_1 [0]] __と `initial_presentation_delay_minus_one`は非常に似ています。前者はビットストリーム内のすべてのフレーム（非表示のフレームも含む）を処理しますが、後者は「ブロック」にある表示フレームのみを処理します。非表示のフレームも「ブロック」にありますが、コンテナレベルでは認識されません。
+
+`initial_presentation_delay_present`が0の場合、` initial_presentation_delay_minus_one`のすべてのビットは0である必要があり、**必須**は破棄されます。
+
+この構造** MAY **の後には、CVS全体に有効なOBUが続きます。タイプ `OBU_SEQUENCE_HEADER`および` OBU_METADATA`のOBUのみが `CodecPrivate`で許可されます。存在する場合、タイプ `OBU_SEQUENCE_HEADER`のOBU、` CVSシーケンスヘッダーOBU`、** MUST **はタイプ `OBU_SEQUENCE_HEADER`の唯一のものであり、構造の後の最初のOBUです。
+
+`CodecPrivate` ** Must **のOBUでは__ [obu_has_size_field] __が1に設定されており、OBUペイロードのサイズがヘッダーの後に続き、最後を除いて__ [LEB128] __を使用してコーディングされていることを示します。 __ [obu_has_size_field] __ ** MAY **が0に設定されている `CodecPrivate`のOBU。この場合、` CodecPrivate`の残りの部分を埋めると見なされます。
+
+`Sequence Header OBU` ** SHOULD **の__ [timing_info_present_flag] __は0である必要があります。1の場合でも、` Blocks`内の `Frame HeaderOBU`の表示時間は破棄する必要があります。つまり、Matroskaコンテナ**で指定されたタイムスタンプ**のみを使用する必要があります。
+
+## PixelWidth
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ PixelWidth` | 必須：はい
+
+`PixelWidth` **は__ [max_frame_width_minus_1] __ +1である必要があります。
+
+## PixelHeight
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ PixelHeight` | 必須：はい
+
+`PixelHeight` **は__ [max_frame_height_minus_1] __ +1である必要があります。
+
+
+# ブロックデータ
+各 `Block`には、1つ以上のOBUを含む1つの` TemporalUnit`が含まれています。ブロック** MUST **に格納されている各OBUには、ヘッダーとペイロードが含まれている必要があります。
+
+`Block`のOBUは、__ [低オーバーヘッドビットストリーム形式の構文] __に従います。フレーム内の最後のOBUを除いて、それらは__ [obu_has_size_field] __を1に設定する必要があります。フレームの残りの部分。
+
+OBUの順序は、[AV1仕様]（# av1-specifications）のセクション7.5で定義されている順序に従う必要があります。
+
+`Block`ごとに少なくとも1つの` Frame HeaderOBU`が**必須**です。
+
+OBUの末尾ビットは**オクテット整列に制限されるべきであり**、パディングに使用されるべきではありません**。
+
+タイプ `OBU_TEMPORAL_DELIMITER`、` OBU_REDUNDANT_FRAME_HEADER`および `OBU_PADDING`のOBUは**使用すべきではありません**。
+
+タイプ `OBU_TILE_LIST`のOBUは**使用してはいけません**。
+
+`SimpleBlock`には、` Frame OBU`が含まれていない場合、キーフレームとしてマークする必要があります**。最初の `FrameOBU`に` KEY_FRAME`の__ [frame_type] __がない場合、 `SimpleBlock` **はキーフレームとしてマークされてはなりません**。`SimpleBlock`は、`シーケンスヘッダーOBU`が含まれていない場合、キーフレームとしてマークする必要があります**。
+
+`BlockGroup`内の` Block`は、 `Block`の最初の` FrameOBU`に `KEY_FRAME`以外の__ [frame_type] __がある場合、` ReferenceBlock`要素を使用する必要があります**。`Block`内の` Block`は、 `Block`に` Sequence Header OBU`が含まれていない場合、 `ReferenceBlock`要素を使用する必要があります**。
+
+__ [frame_header_obu] __の `Block`で、__ [frame_type] __は` INTRA_ONLY_FRAME`です**必須**は、値0の `ReferenceBlock`を使用してそれ自体を参照します。このようにして、ランダムアクセスポイントと間違えられることはありません。
+
+`KEYFRAME`でも` INTRA_ONLY_FRAME`でもないフレームの__ [ref_frame_idx] __値に従って、 `BlockGroup`内の` ReferenceBlocks`は他の以前の `Blocks`のフレームを参照する必要があります。
+
+*注：フレームの種類ごとに `SimpleBlock`と` BlockGroup`を使用できます。`BlockGroup`の機能（` BlockDuration`、 `BlockAdditions`など）が必要ない場合は、通常、` SimpleBlock`が推奨されます。*
+
+`FrameOBUs`または` Frame Header OBUs` **に含まれる__ [temporal_point_info] __は破棄する必要があります。
+
+`Block`タイムスタンプは、__ [InitialPresentationDelay] __なしで__ [PresentationTime] __から変換されます。
+
+`Block`からAV1ビットストリームを再構築する場合、` Temporal DelimiterOBU`を `Block`データの前に付ける必要があります。
+
+
+# セグメントの制限
+
+Matroskaは、「セグメント」全体のコーデック内で許可される変更を制限します。`Segment` ** Must **の各出力フレームは、同じピクセル寸法（` PixelWidth`と `PixelHeight`）を持っています。
+
+AV1の `Track`には` CVS`と同じ要件があります。__[sequence_header_obu] __の内容は、__ [operationing_parameters_infoの内容を除いて、 `Blocks`にあるすべての` Sequence HeaderOBU`に対してビット同一である必要があります。 ] __これは変わる可能性があります。
+
+
+# キューに関する考慮事項
+
+Matroskaはシークに `CuePoints`を使用します。各 `Block`は` Cues`で参照できますが、実際には、コーデックの適切なランダムアクセスポイントのみを探す方がよいでしょう。これは、Keyframeとしてマークされた `SimpleBlock`と、` ReferenceBlock`がない `BlockGroup`のみが` Cues`で参照されることを意味します。
+
+
+# 暗号化
+
+暗号化スキームは、WebMで使用されるものと似ていますが、 `ContentEncryption`要素と追加の` ContentEncAESSettings`および `AESSettingsCipherMode`要素を使用します。暗号化が必要な場合は、サブサンプル暗号化ブロックフォーマットモード** SHOULD **のみを使用する必要があります。これは、AES-CTR暗号モードでサブサンプルの部分暗号化を使用するCommonEncryptionサブサンプルパターン暗号化スキーム `cens`に似ています。WebM暗号化システムの詳細については、https：//www.webmproject.org/docs/webm-encryption/を参照してください。
+
+保護された `ブロック` **は、1つ以上の連続したパーティションに正確にまたがる必要があります**。
+
+* OBUは、特に保護されたデータの範囲が複数ある場合、1つ以上のパーティションにまたがることがあります。ただし、ライターは可能な限りパーティションの数を減らす必要があります。これは、複数の連続する保護されていないOBUにまたがるパーティションと、そのような保護されたOBUが存在する場合は、次の保護されたOBUの最初の保護されていない部分を使用することで実現できます。
+
+*単一パーティションの最大サイズ（32ビット整数に格納）よりも大きい大きなサブサンプル**パーティションは保護されたパーティションと保護されていないパーティションを交互に使用するため、サイズがゼロのパーティションで区切られた複数のパーティションにまたがることがあります**。
+
+
+保護された `Block`内では、次の制約が含まれるすべてのOBUに適用されます。
+
+*すべての__ [obu_header] __構造と関連する__ [obu_size] __フィールドは**暗号化してはいけません**。
+
+*タイプ `OBU_TEMPORAL_DELIMITER`、` OBU_SEQUENCE_HEADER`、 `OBU_FRAME_HEADER`（` OBU_FRAME`内を含む）、 `OBU_REDUNDANT_FRAME_HEADER`、および` OBU_PADDING`のOBUは、暗号化されてはなりません**。
+
+*タイプ `OBU_METADATA`のOBUは**暗号化される可能性があります**。
+
+*タイプ `OBU_FRAME`および` OBU_TILE_GROUP`のOBUは部分的に暗号化されています。このようなOBU内では、以下が適用されます。
+
+    *暗号化されたパーティションは16バイトの倍数である必要があります。
+
+    *暗号化されたパーティションは、__ [decode_tile] __構造サイズ（末尾のビットを含む）が16バイト以上のタイルごとに作成する必要があります。小さい__ [decode_tile] __構造体は**暗号化してはいけません**。
+
+    *暗号化されたパーティション**は** __ [decode_tile] __構造体の最後のバイト（末尾のビットを含む）で終了する必要があります。
+
+    *暗号化されたパーティション**は** __ [decode_tile] __構造体のすべての完全な16バイトブロック（末尾のビットを含む）にまたがる必要があります。
+
+    * __ [decode_tile] __の先頭にある、16バイトの暗号化されたパーティションに収まらないバイト**は、前の保護されていないパーティションに追加する必要があります**。その結果、暗号化されたパーティションは__ [decode_tile] __構造体の最初のバイトではなく、その後の数バイトで始まる可能性があります。
+
+
+# その他のTrackEntryマッピング
+
+メインの「TrackEntry」セクションで説明されている要素は、正しく再生するために不可欠です。ここでは、「TrackEntry」で見つかった要素のリストを示します。これらの要素は、可能な場合は**マッピングする必要があります**。
+
+##シーケンスヘッダーOBUベースの値
+
+次の `TrackEntry`値** SHOULD **は、` CVSシーケンスヘッダーOBU`、つまりCVS内のすべての `シーケンスヘッダーOBU`に共通のビットから抽出される必要があります。
+
+### DefaultDuration
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ DefaultDuration` | 必須：いいえ
+
+`DefaultDuration` ** MAY **は、__ [timing_info_present_flag] __と__ [equal_picture_interval] __が1に設定されている場合に使用されます。
+
+### DisplayWidth
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ DisplayWidth` | 必須：いいえ
+
+カスタムアスペクト比、トリミング値が不要で、 `DisplayUnit`がピクセル単位の場合、__ [render_and_frame_size_different] __が1で__ [max_frame_width_minus_1] __の場合、` DisplayWidth` ** SHOULD **は__ [render_width_minus_1] __ +1になります。それ以外の場合は+1。
+
+*注：Matroskaでは、 `PixelWidth`と同じ値であれば、` DisplayWidth`を記述する必要はありません*
+
+### DisplayHeight
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ DisplayHeight` | 必須：いいえ
+
+カスタムアスペクト比、トリミング値が不要で、 `DisplayUnit`がピクセル単位の場合、__ [render_and_frame_size_different] __が1で、__ [max_frame_height_minus_1] __の場合、` DisplayHeight` ** SHOULD **は__ [render_height_minus_1] __ +1になります。それ以外の場合は+1。
+
+*注：Matroskaでは、 `PixelHeight`と同じ値であれば、` DisplayHeight`を記述する必要はありません*
+
+###色の範囲
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ Color \ Range` | 必須：いいえ
+
+`Range`は__ [color_range] __に対応します。
+* AV1の0（スタジオ）はMatroskaの1に対応します
+* AV1の1（フル）はMatroskaの2に対応します
+
+### BitsPerChannel
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ Color \ BitsPerChannel` | 必須：いいえ
+
+`BitsPerChannel`は__ [BitDepth] __に対応します。
+
+### MatrixCoefficients
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ Color \ MatrixCoefficients` | 必須：いいえ
+
+`MatrixCoefficients`は__ [matrix_coefficients] __に対応します。一部の値は、Matroskaで見つかった値に正しくマップされない場合があります。
+
+### ChromaSitingHorz
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ Color \ ChromaSitingHorz` | 必須：いいえ
+
+`ChromaSitingHorz`は__ [chroma_sample_position] __から推定されます。
+* AV1の0（__ [CSP_UNKNOWN] __）は、Matroskaの0に対応します
+* AV1の1（__ [CSP_VERTICAL] __）は、Matroskaの1に対応します
+* AV1の2（__ [CSP_COLOCATED] __）は、Matroskaの1に対応します
+* AV1の3（__ [CSP_RESERVED] __）**絶対に**「ChromaSitingHorz」を記述しないでください
+
+### ChromaSitingVert
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ Color \ ChromaSitingVert` | 必須：いいえ
+
+`ChromaSitingVert`は__ [chroma_sample_position] __から推定されます。
+* AV1の0（__ [CSP_UNKNOW] __）は、Matroskaの0に対応します
+* AV1の1（__ [CSP_VERTICAL] __）は、Matroskaの2に対応します
+* AV1の2（__ [CSP_COLOCATED] __）は、Matroskaの1に対応します
+* AV1の3（__ [CSP_RESERVED] __）**絶対に**「ChromaSitingVert」を記述しないでください
+
+### TransferCharacteristics
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ Color \ TransferCharacteristics` | 必須：いいえ
+
+`TransferCharacteristics`は__ [transfer_characteristics] __に対応します。
+
+###予備選挙
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ Color \ Primarys` | 必須：いいえ
+
+`Primaries`は__ [color_primaries] __に対応します。一部の値は、Matroskaで見つかった値に正しくマップされない場合があります。
+
+##メタデータOBUベースの値
+
+次の `TrackEntry`値** SHOULD **は`メタデータOBU`から抽出されます。値がCVS全体で異なる場合は、設定すべきではありません。
+
+### MaxCLL
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ Color \ MaxCLL` | 必須：いいえ
+
+`MaxCLL`は、METADATA_TYPE_HDR_CLLタイプのメタデータOBUの__ [max_cll] __に対応します。
+
+### MaxFALL
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ Color \ MaxFALL` | 必須：いいえ
+
+`MaxFALL`は、METADATA_TYPE_HDR_CLLタイプのメタデータOBUの__ [max_fall] __に対応します。
+
+### PrimaryRChromaticityX
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ Color \ MasteringMetadata \ PrimaryRChromaticityX` | 必須：いいえ
+
+`PrimaryRChromaticityX`は、METADATA_TYPE_HDR_MDCVタイプのメタデータOBUの__ [primary_chronoity_x [0]] __に対応します。
+
+### PrimaryRChromaticityY
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ Color \ MasteringMetadata \ PrimaryRChromaticityY` | 必須：いいえ
+
+`PrimaryRChromaticityX`は、METADATA_TYPE_HDR_MDCVタイプのメタデータOBUの__ [primary_chronoity_y [0]] __に対応します。
+
+### PrimaryGChromaticityX
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ Color \ MasteringMetadata \ PrimaryGChromaticityX` | 必須：いいえ
+
+`PrimaryRChromaticityX`は、METADATA_TYPE_HDR_MDCVタイプのメタデータOBUの__ [primary_chronoity_x [1]] __に対応します。
+
+### PrimaryGChromaticityY
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ Color \ MasteringMetadata \ PrimaryGChromaticityY` | 必須：いいえ
+
+`PrimaryRChromaticityX`は、METADATA_TYPE_HDR_MDCVタイプのメタデータOBUの__ [primary_chronoity_y [1]] __に対応します。
+
+### PrimaryBChromaticityX
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ Color \ MasteringMetadata \ PrimaryBChromaticityX` | 必須：いいえ
+
+`PrimaryRChromaticityX`は、METADATA_TYPE_HDR_MDCVタイプのメタデータOBUの__ [primary_chronoity_x [2]] __に対応します。
+
+### PrimaryBChromaticityY
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ Color \ MasteringMetadata \ PrimaryBChromaticityY` | 必須：いいえ
+
+`PrimaryRChromaticityX`は、METADATA_TYPE_HDR_MDCVタイプのメタデータOBUの__ [primary_chronoity_y [2]] __に対応します。
+
+### WhitePointChromaticityX
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ Color \ MasteringMetadata \ WhitePointChromaticityX` | 必須：いいえ
+
+`WhitePointChromaticityX`は、METADATA_TYPE_HDR_MDCVタイプのメタデータOBUの__ [white_point_chronoity_x] __に対応します。
+
+### WhitePointChromaticityY
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ Color \ MasteringMetadata \ WhitePointChromaticityY` | 必須：いいえ
+
+`WhitePointChromaticityY`は、METADATA_TYPE_HDR_MDCVタイプのメタデータOBUの__ [white_point_chronoity_y] __に対応します。
+
+### LuminanceMin
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ Color \ MasteringMetadata \ LuminanceMin` | 必須：いいえ
+
+`LuminanceMin`は、METADATA_TYPE_HDR_MDCVタイプのメタデータOBUの__ [luminance_min] __に対応します。
+
+### LuminanceMax
+EBMLパス： `\ Segment \ Tracks \ TrackEntry \ Video \ Color \ MasteringMetadata \ LuminanceMax` | 必須：いいえ
+
+`LuminanceMin`は、METADATA_TYPE_HDR_MDCVタイプのメタデータOBUの__ [luminance_max] __に対応します。
+
+
+#  参考資料
+
+## AV1仕様
+公式PDF：https：//aomediacodec.github.io/av1-spec/av1-spec.pdf
+
+
+## Matroskaの仕様
+IETFドラフト：https：//tools.ietf.org/html/draft-ietf-cellar-matroska
+
+元の仕様：https：//www.matroska.org/technical/elements.html
+
+
+## ISOBMFFAV1マッピング
+AV1コーデックISOメディアファイル形式のバインド：https：//aomediacodec.github.io/av1-isobmff/
+
+
+## WebMコンテナ
+Matroska仕様に基づく公式仕様：https：//www.webmproject.org/docs/container/
+
+WebM暗号化ドキュメント：https：//www.webmproject.org/docs/webm-encryption/
+
+
+# ドキュメントバージョン
+
+これは、このドキュメントのバージョン1です。

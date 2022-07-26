@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RFC日本語訳一覧</title>
+
+  <%include file="head.html" />
+</head>
+<body>
+  <%include file="header.html" />
+
+  <div style="height: 1ex;"></div> <!-- spacing -->
+
+  <div style="float: right; position: sticky; top: 0;">
+    <button type="button" class="btn btn-light btn-sm">
+      <a href="https://tools.ietf.org/rfc/index">Orig</a>
+    </button>
+  </div>
+
+  <div class="container">
+    <div class="alert alert-info" role="alert">
+      <h4 class="alert-heading">RFC文書を自動翻訳したページ一覧</h4>
+      <ul>
+        <li>翻訳の正確性は保証しません。必ず英文と比較してお読みください。</li>
+        <li>稀に原文の一部が抜ける場合があるので、使用の際は必ず原文もお読みください。</li>
+        <li>図や表が複数ページにわたるときや、間に空行が含まれるときは、上手に解釈できてないことがあります。</li>
+        <li>翻訳物に関してはRFCの著作権の関係で RFC 2220 以降のみを公開しています。</li>
+      </ul>
+    </div>
+
+    <!-- Search form -->
+    <form class="form-inline">
+      <i class="fas fa-search" aria-hidden="true"></i>
+      <input id="searchText" class="form-control form-control-sm ml-3 w-75"
+        type="text" placeholder="Search" aria-label="Search">
+    </form>
+
+    <div style="height: 1ex;"></div> <!-- spacing -->
+
+    <div id="RFCs" class="list-group list-group-flush">
+      % for filenum, filename, title in ctx['files']:
+      <a href="${filename | h}" class="list-group-item list-group-item-action">
+        ${title}
+      </a>
+      % endfor
+    </div>
+  </div>
+</body>
+</html>

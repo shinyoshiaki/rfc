@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<%
+  import textwrap
+  if ctx['updated_by'] == '':
+    ctx['updated_by'] = "自動生成"
+%>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${ctx['title']['text'] | h} 日本語訳</title>
+
+    <%include file="head.html" />
+  </head>
+  <body>
+    <%include file="header.html" />
+    <span id="rfc_number" class="hidden">${ctx['number']}</span>
+    <div style="height: 1ex;"></div>
+    <div style="float: right; position: sticky; top: 0;">
+      <button type="button" class="btn btn-light btn-sm">
+        <a href="https://tools.ietf.org/html/rfc${ctx['number']}">Orig</a>
+      </button>
+    </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">${ctx['title']['text']} 日本語訳</h4>
+            <span class="URL"
+              >URL :
+              <a href="https://tools.ietf.org/html/rfc${ctx['number']}">
+                https://tools.ietf.org/html/rfc${ctx['number']}
+              </a> </span
+            ><br />
+            <span class="title_ja">
+              タイトル : <strong>${ctx['title']['text']}</strong></span
+            ><br />
+            <span class="updated_by">翻訳編集 : ${ctx['updated_by']}</span
+            ><br />
+          </div>
+        </div>
+      </div>
+      % for paragraph in ctx['contents']:
+      <div class="row">
+        % if paragraph.get('raw') == True:
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+${textwrap.indent(paragraph['text'], ' ' * paragraph['indent']) | h}
+        </pre
+          >
+        </div>
+
+        % elif paragraph.get('section_title') == True:
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            ${paragraph['text'] | h}
+          </h5>
+        </div>        
+        % else:
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-${paragraph['indent'] | h}">
+            ${paragraph['text'] | h}
+          </p>
+        </div>        
+        % endif
+      </div>
+      % endfor
+    </div>
+    <div id="rfc_footer"></div>
+  </body>
+</html>

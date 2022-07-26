@@ -1,0 +1,2708 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RFC 6525 - Stream Control Transmission Protocol (SCTP) Stream Reconfiguration 日本語訳</title>
+
+      <link rel="shortcut icon" type="image/x-icon"
+    href="https://tex2e.github.io/rfc-translater/favicon.ico" />
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+  <link rel="stylesheet" href="master.css">
+  <script src="index.js"></script>
+
+  <script>
+    var host = window.location.hostname;
+    if (host != "localhost") {
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-75892425-1', 'auto');
+      ga('send', 'pageview');
+    }
+  </script>
+
+  </head>
+  <body>
+      <nav class="navbar navbar-expand navbar-light bg-light">
+    <a class="navbar-brand" href="index.html">RFC Trans</a>
+    <div class="collapse navbar-collapse" id="navbarText">
+      <div class="navbar-nav mr-auto">
+        <a class="nav-item nav-link" href="privacy-policy.html">Privacy Policy</a>
+        <a class="nav-item nav-link" href="contact.html">Contact</a>
+        <a class="nav-item nav-link" href="../figs/html/index.html">Figs</a>
+      </div>
+      <div class="navbar-nav ml-auto">
+        <span class="navbar-text"><small>@tex2e</small></span>
+      </div>
+    </div>
+  </nav>
+
+    <span id="rfc_number" class="hidden">6525</span>
+    <div style="height: 1ex;"></div>
+    <div style="float: right; position: sticky; top: 0;">
+      <button type="button" class="btn btn-light btn-sm">
+        <a href="https://tools.ietf.org/html/rfc6525">Orig</a>
+      </button>
+    </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">RFC 6525 - Stream Control Transmission Protocol (SCTP) Stream Reconfiguration 日本語訳</h4>
+            <span class="URL"
+              >URL :
+              <a href="https://tools.ietf.org/html/rfc6525">
+                https://tools.ietf.org/html/rfc6525
+              </a> </span
+            ><br />
+            <span class="title_ja">
+              タイトル : <strong>RFC 6525 - Stream Control Transmission Protocol (SCTP) Stream Reconfiguration</strong></span
+            ><br />
+            <span class="updated_by">翻訳編集 : 自動生成</span
+            ><br />
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+Internet Engineering Task Force (IETF)                        R. Stewart
+Request for Comments: 6525                                Adara Networks
+Category: Standards Track                                      M. Tuexen
+ISSN: 2070-1721                         Muenster Univ. of Appl. Sciences
+                                                                  P. Lei
+                                                     Cisco Systems, Inc.
+                                                           February 2012
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Stream Control Transmission Protocol (SCTP) Stream Reconfiguration
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Abstract
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Many applications that use the Stream Control Transmission Protocol (SCTP) want the ability to &#34;reset&#34; a stream. The intention of resetting a stream is to set the numbering sequence of the stream back to &#39;zero&#39; with a corresponding notification to the application layer that the reset has been performed. Applications requiring this feature want it so that they can &#34;reuse&#34; streams for different purposes but still utilize the stream sequence number so that the application can track the message flows. Thus, without this feature, a new use of an old stream would result in message numbers greater than expected, unless there is a protocol mechanism to &#34;reset the streams back to zero&#34;. This document also includes methods for resetting the transmission sequence numbers, adding additional streams, and resetting all stream sequence numbers.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Status of This Memo
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This is an Internet Standards Track document.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document is a product of the Internet Engineering Task Force (IETF). It represents the consensus of the IETF community. It has received public review and has been approved for publication by the Internet Engineering Steering Group (IESG). Further information on Internet Standards is available in Section 2 of RFC 5741.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Information about the current status of this document, any errata, and how to provide feedback on it may be obtained at http://www.rfc-editor.org/info/rfc6525.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Copyright Notice
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Copyright (c) 2012 IETF Trust and the persons identified as the document authors. All rights reserved.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document is subject to BCP 78 and the IETF Trust&#39;s Legal Provisions Relating to IETF Documents (http://trustee.ietf.org/license-info) in effect on the date of publication of this document. Please review these documents carefully, as they describe your rights and restrictions with respect to this document. Code Components extracted from this document must include Simplified BSD License text as described in Section 4.e of the Trust Legal Provisions and are provided without warranty as described in the Simplified BSD License.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Table of Contents
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   1. Introduction ....................................................3
+   2. Conventions .....................................................4
+   3. New Chunk Type ..................................................4
+      3.1. RE-CONFIG Chunk ............................................5
+   4. New Parameter Types .............................................6
+      4.1. Outgoing SSN Reset Request Parameter .......................7
+      4.2. Incoming SSN Reset Request Parameter .......................8
+      4.3. SSN/TSN Reset Request Parameter ............................9
+      4.4. Re-configuration Response Parameter .......................10
+      4.5. Add Outgoing Streams Request Parameter ....................12
+      4.6. Add Incoming Streams Request Parameter ....................13
+   5. Procedures .....................................................14
+      5.1. Sender-Side Procedures ....................................14
+           5.1.1. Sender-Side Procedures for the RE-CONFIG Chunk .....14
+           5.1.2. Sender-Side Procedures for the Outgoing SSN
+                  Reset Request Parameter ............................15
+           5.1.3. Sender-Side Procedures for the Incoming SSN
+                  Reset Request Parameter ............................16
+           5.1.4. Sender-Side Procedures for the SSN/TSN
+                  Reset Request Parameter ............................17
+           5.1.5. Sender-Side Procedures for the Add Outgoing
+                  Streams Request Parameter ..........................17
+           5.1.6. Sender-Side Procedures for the Add Incoming
+                  Streams Request Parameter ..........................17
+           5.1.7. Sender-Side Procedures for the
+                  Re-configuration Response Parameter ................18
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+      5.2. Receiver-Side Procedures ..................................18
+           5.2.1. Receiver-Side Procedures for the RE-CONFIG Chunk ...18
+           5.2.2. Receiver-Side Procedures for the Outgoing
+                  SSN Reset Request Parameter ........................19
+           5.2.3. Receiver-Side Procedures for the Incoming
+                  SSN Reset Request Parameter ........................20
+           5.2.4. Receiver-Side Procedures for the SSN/TSN
+                  Reset Request Parameter ............................21
+           5.2.5. Receiver-Side Procedures for the Add
+                  Outgoing Streams Request Parameter .................21
+           5.2.6. Receiver-Side Procedures for the Add
+                  Incoming Streams Request Parameter .................22
+           5.2.7. Receiver-Side Procedures for the
+                  Re-configuration Response Parameter ................22
+   6. Sockets API Considerations .....................................23
+      6.1. Events ....................................................23
+           6.1.1. Stream Reset Event .................................24
+           6.1.2. Association Reset Event ............................25
+           6.1.3. Stream Change Event ................................26
+      6.2. Event Subscription ........................................27
+      6.3. Socket Options ............................................27
+           6.3.1. Enable/Disable Stream Reset
+                  (SCTP_ENABLE_STREAM_RESET) .........................28
+           6.3.2. Reset Incoming and/or Outgoing Streams
+                  (SCTP_RESET_STREAMS) ...............................29
+           6.3.3. Reset SSN/TSN (SCTP_RESET_ASSOC) ...................29
+           6.3.4. Add Incoming and/or Outgoing Streams
+                  (SCTP_ADD_STREAMS) .................................30
+   7. Security Considerations ........................................30
+   8. IANA Considerations ............................................31
+      8.1. A New Chunk Type ..........................................31
+      8.2. Six New Chunk Parameter Types .............................31
+   9. Acknowledgments ................................................31
+   10. References ....................................................32
+      10.1. Normative References .....................................32
+      10.2. Informative References ...................................32
+   Appendix A. Examples of the Reconfiguration Procedures ............33
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            1. Introduction
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Many applications that use SCTP as defined in [RFC4960] want the ability to &#34;reset&#34; a stream. The intention of resetting a stream is to set the Stream Sequence Numbers (SSNs) of the stream back to &#39;zero&#39; with a corresponding notification to the application layer that the reset has been performed. Applications requiring this feature want to &#34;reuse&#34; streams for different purposes but still utilize the SSN so that the application can track the message flows. Thus, without this feature, a new use of an old stream would result in message numbers greater than expected, unless there is a protocol mechanism to &#34;reset the streams back to zero&#34;. This document also includes methods for resetting the Transmission Sequence Numbers (TSNs), adding additional streams, and resetting all SSNs.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The sockets API for SCTP defined in [RFC6458] exposes the sequence numbers used by SCTP for user message transfer. Therefore, resetting them can be used by application writers. Please note that the corresponding sequence number for TCP is not exposed via the sockets API for TCP.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            2. Conventions
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The key words &#34;MUST&#34;, &#34;MUST NOT&#34;, &#34;REQUIRED&#34;, &#34;SHALL&#34;, &#34;SHALL NOT&#34;, &#34;SHOULD&#34;, &#34;SHOULD NOT&#34;, &#34;RECOMMENDED&#34;, &#34;MAY&#34;, and &#34;OPTIONAL&#34; in this document are to be interpreted as described in [RFC2119].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            3. New Chunk Type
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This section defines the new chunk type that will be used to reconfigure streams. Table 1 illustrates the new chunk type.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+            +------------+------------------------------------+
+            | Chunk Type | Chunk Name                         |
+            +------------+------------------------------------+
+            | 130        | Re-configuration Chunk (RE-CONFIG) |
+            +------------+------------------------------------+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-34">
+            Table 1
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            It should be noted that the format of the RE-CONFIG chunk requires that the receiver ignore the chunk if it is not understood and continue processing all chunks that follow. This is accomplished by the use of the upper bits of the chunk type as described in Section 3.2 of [RFC4960].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            All transported integer numbers are in &#34;network byte order&#34;, a.k.a. Big Endian.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            3.1. RE-CONFIG Chunk
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document adds one new chunk type to SCTP. The chunk has the following format:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   | Type = 130    |  Chunk Flags  |      Chunk Length             |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   \                                                               \
+   /                  Re-configuration Parameter                   /
+   \                                                               \
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   \                                                               \
+   /             Re-configuration Parameter (optional)             /
+   \                                                               \
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Chunk Type: 1 byte (unsigned integer) This field holds the IANA-defined chunk type for the RE-CONFIG chunk. The value of this field is 130.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Chunk Flags: 1 byte (unsigned integer) This field is set to 0 by the sender and ignored by the receiver.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Chunk Length: 2 bytes (unsigned integer) This field holds the length of the chunk in bytes, including the Chunk Type, Chunk Flags, and Chunk Length.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Re-configuration Parameter This field holds a Re-configuration Request Parameter or a Re-configuration Response Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Note that each RE-CONFIG chunk holds at least one parameter and at most two parameters. Only the following combinations are allowed:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            1. Outgoing SSN Reset Request Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            2. Incoming SSN Reset Request Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            3. Outgoing SSN Reset Request Parameter, Incoming SSN Reset Request Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            4. SSN/TSN Reset Request Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            5. Add Outgoing Streams Request Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            6. Add Incoming Streams Request Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            7. Add Outgoing Streams Request Parameter, Add Incoming Streams Request Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            8. Re-configuration Response Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            9. Re-configuration Response Parameter, Outgoing SSN Reset Request Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            10. Re-configuration Response Parameter, Re-configuration Response Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If a sender transmits an unsupported combination, the receiver SHOULD send an ERROR chunk with a Protocol Violation cause, as defined in Section 3.3.10.13 of [RFC4960]).
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            4. New Parameter Types
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This section defines the new parameter types that will be used in the RE-CONFIG chunk. Table 2 illustrates the new parameter types.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+        +----------------+----------------------------------------+
+        | Parameter Type | Parameter Name                         |
+        +----------------+----------------------------------------+
+        | 13             | Outgoing SSN Reset Request Parameter   |
+        | 14             | Incoming SSN Reset Request Parameter   |
+        | 15             | SSN/TSN Reset Request Parameter        |
+        | 16             | Re-configuration Response Parameter    |
+        | 17             | Add Outgoing Streams Request Parameter |
+        | 18             | Add Incoming Streams Request Parameter |
+        +----------------+----------------------------------------+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-34">
+            Table 2
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            It should be noted that the parameter format requires that the receiver stop processing the parameter and not process any further parameters within the chunk if the parameter type is not recognized. This is accomplished by the use of the upper bits of the parameter type as described in Section 3.2.1 of [RFC4960].
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            All transported integer numbers are in &#34;network byte order&#34;, a.k.a. Big Endian.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            4.1. Outgoing SSN Reset Request Parameter
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This parameter is used by the sender to request the reset of some or all outgoing streams.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Parameter Type = 13       | Parameter Length = 16 + 2 * N |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |           Re-configuration Request Sequence Number            |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |           Re-configuration Response Sequence Number           |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                Sender&#39;s Last Assigned TSN                     |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |  Stream Number 1 (optional)   |    Stream Number 2 (optional) |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   /                            ......                             /
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |  Stream Number N-1 (optional) |    Stream Number N (optional) |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Parameter Type: 2 bytes (unsigned integer) This field holds the IANA-defined parameter type for the Outgoing SSN Reset Request Parameter. The value of this field is 13.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Parameter Length: 2 bytes (unsigned integer) This field holds the length in bytes of the parameter; the value MUST be 16 + 2 * N, where N is the number of stream numbers listed.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Re-configuration Request Sequence Number: 4 bytes (unsigned integer) This field is used to identify the request. It is a monotonically increasing number that is initialized to the same value as the initial TSN. It is increased by 1 whenever sending a new Re-configuration Request Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Re-configuration Response Sequence Number: 4 bytes (unsigned integer) When this Outgoing SSN Reset Request Parameter is sent in response to an Incoming SSN Reset Request Parameter, this parameter is also an implicit response to the incoming request. This field then holds the Re-configuration Request Sequence Number of the incoming request. In other cases, it holds the next expected Re-configuration Request Sequence Number minus 1.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Sender&#39;s Last Assigned TSN: 4 bytes (unsigned integer) This value holds the next TSN minus 1 -- in other words, the last TSN that this sender assigned.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Stream Number 1..N: 2 bytes (unsigned integer) This optional field, if included, is used to indicate specific streams that are to be reset. If no streams are listed, then all streams are to be reset.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This parameter can appear in a RE-CONFIG chunk. This parameter MUST NOT appear in any other chunk type.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            4.2. Incoming SSN Reset Request Parameter
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This parameter is used by the sender to request that the peer reset some or all of its outgoing streams.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Parameter Type = 14       |  Parameter Length = 8 + 2 * N |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |          Re-configuration Request Sequence Number             |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |  Stream Number 1 (optional)   |    Stream Number 2 (optional) |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   /                            ......                             /
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |  Stream Number N-1 (optional) |    Stream Number N (optional) |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Parameter Type: 2 bytes (unsigned integer) This field holds the IANA-defined parameter type for the Incoming SSN Reset Request Parameter. The value of this field is 14.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Parameter Length: 2 bytes (unsigned integer) This field holds the length in bytes of the parameter; the value MUST be 8 + 2 * N.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Re-configuration Request Sequence Number: 4 bytes (unsigned integer) This field is used to identify the request. It is a monotonically increasing number that is initialized to the same value as the initial TSN. It is increased by 1 whenever sending a new Re-configuration Request Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Stream Number 1..N: 2 bytes (unsigned integer) This optional field, if included, is used to indicate specific streams that are to be reset. If no streams are listed, then all streams are to be reset.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This parameter can appear in a RE-CONFIG chunk. This parameter MUST NOT appear in any other chunk type.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            4.3. SSN/TSN Reset Request Parameter
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This parameter is used by the sender to request a reset of the TSN and SSN numbering of all incoming and outgoing streams.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Parameter Type = 15       |      Parameter Length = 8     |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |         Re-configuration Request Sequence Number              |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Parameter Type: 2 bytes (unsigned integer) This field holds the IANA-defined parameter type for the SSN/TSN Reset Request Parameter. The value of this field is 15.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Parameter Length: 2 bytes (unsigned integer) This field holds the length in bytes of the parameter; the value MUST be 8.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Re-configuration Request Sequence Number: 4 bytes (unsigned integer) This field is used to identify the request. It is a monotonically increasing number that is initialized to the same value as the initial TSN. It is increased by 1 whenever sending a new Re-configuration Request Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This parameter can appear in a RE-CONFIG chunk. This parameter MUST NOT appear in any other chunk type.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            4.4. Re-configuration Response Parameter
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This parameter is used by the receiver of a Re-configuration Request Parameter to respond to the request.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Parameter Type = 16       |      Parameter Length         |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |         Re-configuration Response Sequence Number             |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                            Result                             |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                   Sender&#39;s Next TSN (optional)                |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                  Receiver&#39;s Next TSN (optional)               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Parameter Type: 2 bytes (unsigned integer) This field holds the IANA-defined parameter type for the Re-configuration Response Parameter. The value of this field is 16.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Parameter Type Length: 2 bytes (unsigned integer) This field holds the length in bytes of the parameter; the value MUST be 12 if the optional fields are not present and 20 otherwise.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Re-configuration Response Sequence Number: 4 bytes (unsigned integer) This value is copied from the request parameter and is used by the receiver of the Re-configuration Response Parameter to tie the response to the request.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Result: 4 bytes (unsigned integer) This value describes the result of the processing of the request. It is encoded as indicated in Table 3:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+             +--------+-------------------------------------+
+             | Result | Description                         |
+             +--------+-------------------------------------+
+             | 0      | Success - Nothing to do             |
+             | 1      | Success - Performed                 |
+             | 2      | Denied                              |
+             | 3      | Error - Wrong SSN                   |
+             | 4      | Error - Request already in progress |
+             | 5      | Error - Bad Sequence Number         |
+             | 6      | In progress                         |
+             +--------+-------------------------------------+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-34">
+            Table 3
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Sender&#39;s Next TSN: 4 bytes (unsigned integer) This field holds the TSN that the sender of the response will use to send the next DATA chunk. The field is only applicable in responses to SSN/TSN reset requests.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Receiver&#39;s Next TSN: 4 bytes (unsigned integer) This field holds the TSN that the receiver of the response must use to send the next DATA chunk. The field is only applicable in responses to SSN/TSN reset requests.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Either both optional fields (Sender&#39;s Next TSN and Receiver&#39;s Next TSN) MUST be present, or no field.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This parameter can appear in a RE-CONFIG chunk. This parameter MUST NOT appear in any other chunk type.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            4.5. Add Outgoing Streams Request Parameter
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This parameter is used by the sender to request that an additional number of outgoing streams (i.e., the receiver&#39;s incoming streams) be added to the association.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Parameter Type = 17       |      Parameter Length = 12    |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |          Re-configuration Request Sequence Number             |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |      Number of new streams    |         Reserved              |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Parameter Type: 2 bytes (unsigned integer) This field holds the IANA-defined parameter type for the Add Outgoing Streams Request Parameter. The value of this field is 17.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Parameter Length: 2 bytes (unsigned integer) This field holds the length in bytes of the parameter; the value MUST be 12.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Re-configuration Request Sequence Number: 4 bytes (unsigned integer) This field is used to identify the request. It is a monotonically increasing number that is initialized to the same value as the initial TSN. It is increased by 1 whenever sending a new Re-configuration Request Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Number of new streams: 2 bytes (unsigned integer) This value holds the number of additional outgoing streams that the sender requests be added to the association. Streams are added in order and are consecutive; e.g., if an association has 4 outgoing streams (0-3) and a request is made to add 3 streams, then the new streams will be 4, 5, and 6.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Reserved: 2 bytes (unsigned integer) This field is reserved. It SHOULD be set to 0 by the sender and ignored by the receiver.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This parameter MAY appear in a RE-CONFIG chunk. This parameter MUST NOT appear in any other chunk type.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            4.6. Add Incoming Streams Request Parameter
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This parameter is used by the sender to request that the peer add an additional number of outgoing streams (i.e., the sender&#39;s incoming streams) to the association.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Parameter Type = 18       |      Parameter Length = 12    |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |          Re-configuration Request Sequence Number             |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |      Number of new streams    |         Reserved              |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Parameter Type: 2 bytes (unsigned integer) This field holds the IANA-defined parameter type for the Add Incoming Streams Request Parameter. The value of this field is 18.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Parameter Length: 2 bytes (unsigned integer) This field holds the length in bytes of the parameter; the value MUST be 12.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Re-configuration Request Sequence Number: 4 bytes (unsigned integer) This field is used to identify the request. It is a monotonically increasing number that is initialized to the same value as the initial TSN. It is increased by 1 whenever sending a new Re-configuration Request Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Number of new streams: 2 bytes (unsigned integer) This value holds the number of additional incoming streams that the sender requests be added to the association. Streams are added in order and are consecutive; e.g., if an association has 4 outgoing streams (0-3) and a request is made to add 3 streams, then the new streams will be 4, 5, and 6.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Reserved: 2 bytes (unsigned integer) This field is reserved. It SHOULD be set to 0 by the sender and ignored by the receiver.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This parameter MAY appear in a RE-CONFIG chunk. This parameter MUST NOT appear in any other chunk type.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            5. Procedures
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This section defines the procedures used by both the sender and receiver of a RE-CONFIG chunk. Various examples of re-configuration scenarios are given in Appendix A.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            One important thing to remember about SCTP streams is that they are uni-directional and there is no correspondence between outgoing and incoming streams. The procedures outlined in this section are designed so that the incoming side will always reset its SSN first (before the outgoing side), which means the re-configuration request must always originate from the outgoing side. These two issues have important ramifications upon how an SCTP endpoint might request that its incoming streams be reset. In effect, it must ask the peer to start an outgoing reset procedure and once that request is acknowledged let the peer actually control the reset operation.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            5.1. Sender-Side Procedures
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This section describes the procedures related to the sending of RE-CONFIG chunks. A RE-CONFIG chunk is composed of one or two Type-Length-Value (TLV) parameters.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            5.1.1. Sender-Side Procedures for the RE-CONFIG Chunk
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The SCTP protocol extension described in this document uses the Supported Extensions Parameter defined in [RFC5061] for negotiating the support.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            An SCTP endpoint supporting this extension MUST include the chunk type of the RE-CONFIG chunk in the Supported Extensions Parameter in either the INIT or INIT-ACK. Before sending a RE-CONFIG chunk, the sender MUST ensure that the peer advertised support for the re-configuration extension. If the chunk type of the RE-CONFIG chunk does not appear in the supported extension&#39;s list of chunks, then the sender MUST NOT send any re-configuration request to the peer, and any request by the application for such service SHOULD be responded to with an appropriate error indicating that the peer SCTP stack does not support the re-configuration extension.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            At any given time, there MUST NOT be more than one request in flight. So, if the Re-configuration Timer is running and the RE-CONFIG chunk contains at least one request parameter, the chunk MUST be buffered.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            After packaging the RE-CONFIG chunk and sending it to the peer, the sender MUST start the Re-configuration Timer if the RE-CONFIG chunk contains at least one request parameter. If it contains no request parameters, the Re-configuration Timer MUST NOT be started. This timer MUST use the same value as SCTP&#39;s data transmission timer (i.e., the retransmission timeout (RTO) timer) and MUST use exponential backoff, doubling the value at every expiration. If the timer expires, besides doubling the value, the sender MUST retransmit the RE-CONFIG chunk, increment the appropriate error counts (for both the association and the destination), and perform threshold management, possibly destroying the association if SCTP retransmission thresholds are exceeded.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            5.1.2. Sender-Side Procedures for the Outgoing SSN Reset Request Parameter
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            When an SCTP sender wants to reset the SSNs of some or all outgoing streams, it can send an Outgoing SSN Reset Request Parameter, provided that the Re-configuration Timer is not running. The following steps must be followed:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            A1: The sender MUST stop assigning new SSNs to new user data provided by the upper layer for the affected streams and queue it. This is because it is not known whether the receiver of the request will accept or deny it; moreover, a lost request might cause an out-of-sequence error in a stream that the receiver is not yet prepared to handle.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            A2: The sender MUST assign the next re-configuration request sequence number and MUST put it into the Re-configuration Request Sequence Number field of the Outgoing SSN Reset Request Parameter. The next re-configuration request sequence number MUST then be incremented by 1.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            A3: The Sender&#39;s Last Assigned TSN MUST be set to the next TSN the sender assigns minus 1.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            A4: If this Outgoing SSN Reset Request Parameter is sent in response to an Incoming SSN Reset Request Parameter, the stream numbers MUST be copied from the Incoming SSN Reset Request Parameter to the Outgoing SSN Reset Request Parameter. The Re-configuration Response Sequence Number of the Outgoing SSN Reset Request Parameter MUST be the Re-configuration Request Sequence Number of the Incoming SSN Reset Request Parameter. If this Outgoing SSN Reset Request Parameter is sent at the request of the upper layer and the sender requests that all outgoing streams be reset, stream numbers SHOULD NOT be put into the Outgoing SSN Reset Request Parameter. If the sender requests that only some outgoing streams be reset, these stream numbers MUST be placed in the Outgoing SSN Reset Request Parameter. The Re-configuration Response Sequence Number is the next expected Re-configuration Request Sequence Number of the peer minus 1.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            A5: The Outgoing SSN Reset Request Parameter MUST be put into a RE-CONFIG Chunk. The Outgoing SSN Reset Request Parameter MAY be put together with either an Incoming SSN Reset Request Parameter or a Re-configuration Response Parameter, but not with both. It MUST NOT be put together with any other parameter, as described in Section 3.1.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            A6: The RE-CONFIG chunk MUST be sent following the rules given in Section 5.1.1.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            5.1.3. Sender-Side Procedures for the Incoming SSN Reset Request Parameter
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            When an SCTP sender wants to reset the SSNs of some or all incoming streams, it can send an Incoming SSN Reset Request Parameter, provided that the Re-configuration Timer is not running. The following steps must be followed:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            B1: The sender MUST assign the next re-configuration request sequence number and MUST put it into the Re-configuration Request Sequence Number field of the Incoming SSN Reset Request Parameter. After assigning it, the next re-configuration request sequence number MUST be incremented by 1.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            B2: If the sender wants all incoming streams to be reset, stream numbers SHOULD NOT be put into the Incoming SSN Reset Request Parameter. If the sender wants only some incoming streams to be reset, these stream numbers MUST be filled in the Incoming SSN Reset Request Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            B3: The Incoming SSN Reset Request Parameter MUST be put into a RE-CONFIG Chunk. It MAY be put together with an Outgoing SSN Reset Request Parameter but MUST NOT be put together with any other parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            B4: The RE-CONFIG chunk MUST be sent following the rules given in Section 5.1.1.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            When sending an Incoming SSN Reset Request, there is a potential that the peer has just reset or is in the process of resetting the same streams via an Outgoing SSN Reset Request. This collision scenario is discussed in Section 5.2.3.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            5.1.4. Sender-Side Procedures for the SSN/TSN Reset Request Parameter
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            When an SCTP sender wants to reset the SSNs and TSNs, it can send an SSN/TSN Reset Request Parameter, provided that the Re-configuration Timer is not running. The following steps must be followed:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            C1: The sender MUST assign the next re-configuration request sequence number and put it into the Re-configuration Request Sequence Number field of the SSN/TSN Reset Request Parameter. After assigning it, the next re-configuration request sequence number MUST be incremented by 1.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            C2: The sender has either no outstanding TSNs or considers all outstanding TSNs abandoned. The sender MUST queue any user data, suspending any new transmissions and TSN assignment until the reset procedure is finished by the peer either acknowledging or denying the request.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            C3: The SSN/TSN Reset Request Parameter MUST be put into a RE-CONFIG chunk. There MUST NOT be any other parameter in this chunk.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            C4: The RE-CONFIG chunk MUST be sent following the rules given in Section 5.1.1.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Only one SSN/TSN Reset Request SHOULD be sent within 30 seconds, which is considered a maximum segment lifetime (the IP MSL).
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            5.1.5. Sender-Side Procedures for the Add Outgoing Streams Request Parameter
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            When an SCTP sender wants to increase the number of outbound streams to which it is able to send, it may add an Add Outgoing Streams Request Parameter to the RE-CONFIG chunk. Upon sending the request, the sender MUST await a positive acknowledgment (Success) before using any additional stream added by this request. Note that new streams are added adjacent to the previous streams with no gaps. This means that if a request is made to add 2 streams to an association that already has 5 (0-4), then the new streams, upon successful completion, are streams 5 and 6. A new stream MUST use SSN 0 for its first ordered message.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            5.1.6. Sender-Side Procedures for the Add Incoming Streams Request Parameter
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            When an SCTP sender wants to increase the number of inbound streams to which the peer is able to send, it may add an Add Incoming Streams Request Parameter to the RE-CONFIG chunk. Note that new streams are added adjacent to the previous streams with no gaps. This means that if a request is made to add 2 streams to an association that already has 5 (0-4), then the new streams, upon successful completion, are streams 5 and 6. A new stream MUST use SSN 0 for its first ordered message.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            5.1.7. Sender-Side Procedures for the Re-configuration Response Parameter
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            When an implementation receives a reset request parameter, it must respond with a Re-configuration Response Parameter in the following manner:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            D1: The Re-configuration Request Sequence number of the incoming request MUST be copied to the Re-configuration Response Sequence Number field of the Re-configuration Response Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            D2: The result of the processing of the incoming request according to Table 3 MUST be placed in the Result field of the Re-configuration Response Parameter.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            D3: If the incoming request is an SSN/TSN reset request, the Sender&#39;s Next TSN field MUST be filled with the next TSN the sender of this Re-configuration Response Parameter will assign. For other requests, the Sender&#39;s Next TSN field, which is optional, MUST NOT be used.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            D4: If the incoming request is an SSN/TSN reset request, the Receiver&#39;s Next TSN field MUST be filled with a TSN such that the sender of the Re-configuration Response Parameter can be sure it can discard received DATA chunks with smaller TSNs. The value SHOULD be the smallest TSN not acknowledged by the receiver of the request plus 2^31. For other requests, the Receiver&#39;s Next TSN field, which is optional, MUST NOT be used.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            5.2. Receiver-Side Procedures
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            5.2.1. Receiver-Side Procedures for the RE-CONFIG Chunk
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Upon reception of a RE-CONFIG chunk, each parameter within it SHOULD be processed. If multiple parameters have to be returned, they MUST be put into one RE_CONFIG chunk. If the received RE-CONFIG chunk contains at least one request parameter, a selective acknowledgment (SACK) chunk SHOULD be sent back and MAY be bundled with the RE-CONFIG chunk. If the received RE-CONFIG chunk contains at least one request and based on the analysis of the Re-configuration Request Sequence Numbers this is the last received RE-CONFIG chunk (i.e., a retransmission), the same RE-CONFIG chunk MUST to be sent back in response, as it was earlier.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The decision to deny a re-configuration request is an administrative decision and may be user configurable even after the association has formed. If for whatever reason the endpoint does not wish to process a received request parameter, it MUST send a corresponding response parameter as described in Section 5.1.7, with an appropriate Result field.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            Implementation Note: It is recommended that a SACK be bundled with any re-configuration response so that any retransmission processing that needs to occur can be expedited. A SACK chunk is not required for this feature to work, but it will in effect help minimize the delay in completing a re-configuration operation in the face of any data loss.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            5.2.2. Receiver-Side Procedures for the Outgoing SSN Reset Request Parameter
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            In the case that the endpoint is willing to perform a stream reset, the following steps must be followed:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            E1: If the Re-configuration Timer is running for the Re-configuration Request Sequence Number indicated in the Re-configuration Response Sequence Number field, the Re-configuration Request Sequence Number MUST be marked as acknowledged. If all Re-configuration Request Sequence Numbers for which the Re-configuration Timer is running are acknowledged, the Re-configuration Timer MUST be stopped.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            E2: If the Sender&#39;s Last Assigned TSN is greater than the cumulative acknowledgment point, then the endpoint MUST enter &#34;deferred reset processing&#34;. In this mode, any data arriving with a TSN larger than the Sender&#39;s Last Assigned TSN for the affected stream(s) MUST be queued locally and held until the cumulative acknowledgment point reaches the Sender&#39;s Last Assigned TSN. When the cumulative acknowledgment point reaches the last assigned TSN, then proceed to the next step. If the endpoint enters &#34;deferred reset processing&#34;, it MUST put a Re-configuration Response Parameter into a RE-CONFIG chunk indicating &#34;In progress&#34; and MUST send the RE-CONFIG chunk.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            E3: If no stream numbers are listed in the parameter, then all incoming streams MUST be reset to 0 as the next expected SSN. If specific stream numbers are listed, then only these specific streams MUST be reset to 0, and all other non-listed SSNs remain unchanged.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            E4: Any queued TSNs (queued at step E2) MUST now be released and processed normally.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            E5: A Re-configuration Response Parameter MUST be put into a RE-CONFIG chunk indicating successful processing.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            E6: The RE-CONFIG chunk MUST be sent after the incoming RE-CONFIG chunk is processed completely.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            5.2.3. Receiver-Side Procedures for the Incoming SSN Reset Request Parameter
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            In the case that the endpoint is willing to perform a stream reset, the following steps must be followed:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            F1: An Outgoing SSN Reset Request Parameter MUST be put into a RE-CONFIG chunk according to Section 5.1.2.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            F2: The RE-CONFIG chunk MUST be sent after the incoming RE-CONFIG chunk is processed completely.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            When a peer endpoint requests an Incoming SSN Reset Request, it is possible that the local endpoint has just sent an Outgoing SSN Reset Request on the same association and has not yet received a response. In such a case, the local endpoint MUST do the following:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o If the Outgoing SSN Reset Request Parameter that was just sent completely overlaps the received Incoming SSN Reset Request Parameter, respond to the peer with an acknowledgment indicating that there was &#34;Nothing to do&#34;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            o Otherwise, process the Incoming SSN Reset Request Parameter normally, responding to the peer with an acknowledgment. Note that this case includes the situation where some of the streams requested overlap with the Outgoing SSN Reset Request that was just sent. Even in such a situation, the Incoming SSN Reset MUST be processed normally, even though this means that (if the endpoint elects to do the stream reset) streams that are already at SSN 0 will be reset a subsequent time.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            It is also possible that the Incoming request will arrive after the Outgoing SSN Reset Request just completed. In such a case, all of the streams being requested will be already set to 0. If so, the local endpoint SHOULD send back a Re-configuration Response with the success code &#34;Nothing to do&#34;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Note that in either race condition, the local endpoint could optionally also perform the reset. This would result in streams that are already at sequence 0 being reset again to 0, which would cause no harm to the application but will add an extra message to the network.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            5.2.4. Receiver-Side Procedures for the SSN/TSN Reset Request Parameter
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            In the case that the endpoint is willing to perform an SSN/TSN reset, the following steps must be followed:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            G1: Compute an appropriate value for the Receiver&#39;s Next TSN -- the TSN that the peer should use to send the next DATA chunk. The value SHOULD be the smallest TSN not acknowledged by the receiver of the request plus 2^31.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            G2: Compute an appropriate value for the local endpoint&#39;s next TSN, i.e., the next TSN assigned by the receiver of the SSN/TSN reset chunk. The value SHOULD be the highest TSN sent by the receiver of the request plus 1.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            G3: The same processing as though a SACK chunk with no gap report and a cumulative TSN ACK of the Sender&#39;s Next TSN minus 1 were received MUST be performed.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            G4: The same processing as though a FWD-TSN chunk (as defined in [RFC3758]) with all streams affected and a new cumulative TSN ACK of the Receiver&#39;s Next TSN minus 1 were received MUST be performed.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            G5: The next expected and outgoing SSNs MUST be reset to 0 for all incoming and outgoing streams.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            G6: A Re-configuration Response Parameter MUST be put into a RE-CONFIG chunk indicating successful processing.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            G7: The RE-CONFIG chunk MUST be sent after the incoming RE-CONFIG chunk is processed completely.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            5.2.5. Receiver-Side Procedures for the Add Outgoing Streams Request Parameter
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            When an SCTP endpoint receives a re-configuration request adding additional streams, it MUST send a response parameter either acknowledging or denying the request. If the response is successful, the receiver MUST add the requested number of inbound streams to the association, initializing the next expected SSN to 0. The SCTP endpoint SHOULD deny the request if the number of streams exceeds a limit that should be configurable by the application.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            5.2.6. Receiver-Side Procedures for the Add Incoming Streams Request Parameter
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            When an SCTP endpoint receives a re-configuration request adding additional incoming streams, it MUST either send a response parameter denying the request or send a corresponding Add Outgoing Streams Request Parameter, following the rules given in Section 5.1.5. The SCTP endpoint SHOULD deny the request if the number of streams exceeds a limit that should be configurable by the application.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            5.2.7. Receiver-Side Procedures for the Re-configuration Response Parameter
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            On receipt of a Re-configuration Response Parameter, the following must be performed:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            H1: If the Re-configuration Timer is running for the Re-configuration Request Sequence Number indicated in the Re-configuration Response Sequence Number field, the Re-configuration Request Sequence Number MUST be marked as acknowledged. If all Re-configuration Request Sequence Numbers for which the Re-configuration Timer is running are acknowledged, the Re-configuration Timer MUST be stopped. If the timer was not running for the Re-configuration Request Sequence Number, the processing of the Re-configuration Response Parameter is complete.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            H2: If the Result field indicates &#34;In progress&#34;, the timer for the Re-configuration Request Sequence Number is started again. If the timer runs out, the RE-CONFIG chunk MUST be retransmitted but the corresponding error counters MUST NOT be incremented.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            H3: If the Result field does not indicate successful processing, the processing of this response is complete.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            H4: If the request was an Outgoing SSN Reset Request, the affected streams MUST now be reset and all queued data should now be processed. The assigning of SSNs is allowed again.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            H5: If the request was an SSN/TSN Reset Request, new data MUST be sent from the Receiver&#39;s Next TSN, beginning with SSN 0 for all outgoing streams. All incoming streams MUST be reset to 0 as the next expected SSN. The peer will send DATA chunks starting with the Sender&#39;s Next TSN.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            H6: If the request was to add outgoing streams, the endpoint MUST add the additional streams to the association. Note that an implementation may allocate the memory at the time of the request, but it MUST NOT use the streams until the peer has responded with a positive acknowledgment.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            6. Sockets API Considerations
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This section describes how the sockets API defined in [RFC6458] needs to be extended to make the features of SCTP re-configuration available to the application.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Please note that this section is informational only.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            6.1. Events
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            When the SCTP_ASSOC_CHANGE notification is delivered and both peers support the extension described in this document, SCTP_ASSOC_SUPPORTS_RE_CONFIG should be listed in the sac_info field.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The union sctp_notification {} is extended to contain three new fields: sn_strreset_event, sn_assocreset_event, and sn_strchange_event:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   union sctp_notification {
+     struct sctp_tlv {
+       uint16_t sn_type; /* Notification type. */
+       uint16_t sn_flags;
+       uint32_t sn_length;
+     } sn_header;
+     ...
+     struct sctp_stream_reset_event sn_strreset_event;
+     struct sctp_assoc_reset_event sn_assocreset_event;
+     struct sctp_stream_change_event sn_strchange_event;
+     ...
+   }
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The corresponding sn_type values are given in Table 4.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   +--------------------------+----------------------------------------+
+   | sn_type                  | valid field in union sctp_notification |
+   +--------------------------+----------------------------------------+
+   | SCTP_STREAM_RESET_EVENT  | sn_strreset_event                      |
+   | SCTP_ASSOC_RESET_EVENT   | sn_assocreset_event                    |
+   | SCTP_STREAM_CHANGE_EVENT | sn_strchange_event                     |
+   +--------------------------+----------------------------------------+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-34">
+            Table 4
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            These events are delivered when an incoming request was processed successfully or the processing of an outgoing request has been finished.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            6.1.1. Stream Reset Event
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The event delivered has the following structure:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   struct sctp_stream_reset_event {
+     uint16_t strreset_type;
+     uint16_t strreset_flags;
+     uint32_t strreset_length;
+     sctp_assoc_t strreset_assoc_id;
+     uint16_t strreset_stream_list[];
+   };
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            strreset_type: This field should be SCTP_STREAM_RESET_EVENT.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            strreset_flags: This field is formed from the bitwise OR of one or more of the following currently defined flags:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            SCTP_STREAM_RESET_INCOMING_SSN: The stream identifiers given in strreset_stream_list[] refer to incoming streams of the endpoint.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            SCTP_STREAM_RESET_OUTGOING_SSN: The stream identifiers given in strreset_stream_list[] refer to outgoing streams of the endpoint.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            SCTP_STREAM_RESET_DENIED: The corresponding request was denied by the peer.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            SCTP_STREAM_RESET_FAILED: The corresponding request failed.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            At least one of SCTP_STREAM_RESET_INCOMING_SSN and SCTP_STREAM_RESET_OUTGOING_SSN is set. SCTP_STREAM_RESET_DENIED and SCTP_STREAM_RESET_FAILED are mutually exclusive. If the request was successful, none of these are set.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            strreset_length: This field is the total length in bytes of the delivered event, including the header.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            strreset_assoc_id: This association id field holds the identifier for the association. All notifications for a given association have the same association identifier. For one-to-one style sockets, this field is ignored.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            strreset_stream_list: This is the list of stream identifiers to which this event refers. An empty list identifies all streams as being reset. Depending on strreset_flags, the identifiers refer to incoming or outgoing streams, or both.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            6.1.2. Association Reset Event
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The event delivered has the following structure:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   struct sctp_assoc_reset_event {
+     uint16_t assocreset_type;
+     uint16_t assocreset_flags;
+     uint32_t assocreset_length;
+     sctp_assoc_t assocreset_assoc_id;
+     uint32_t assocreset_local_tsn;
+     uint32_t assocreset_remote_tsn;
+   };
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            assocreset_type: This field should be SCTP_ASSOC_RESET_EVENT.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            assocreset_flags: This field is formed from the bitwise OR of one or more of the following currently defined flags:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            SCTP_ASSOC_RESET_DENIED: The corresponding outgoing request was denied by the peer.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            SCTP_ASSOC_RESET_FAILED: The corresponding outgoing request failed.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            SCTP_ASSOC_RESET_DENIED and SCTP_ASSOC_RESET_FAILED are mutually exclusive. If the request was successful, none of these are set.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            assocreset_length: This field is the total length in bytes of the delivered event, including the header.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            assocreset_assoc_id: This association id field holds the identifier for the association. All notifications for a given association have the same association identifier. For one-to-one style sockets, this field is ignored.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            assocreset_local_tsn: This field is the next TSN used by the endpoint.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            assocreset_remote_tsn: This field is the next TSN used by the peer.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            6.1.3. Stream Change Event
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The event delivered has the following structure:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   struct sctp_stream_change_event {
+     uint16_t strchange_type;
+     uint16_t strchange_flags;
+     uint32_t strchange_length;
+     sctp_assoc_t strchange_assoc_id;
+     uint16_t strchange_instrms;
+     uint16_t strchange_outstrms;
+   };
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            strchange_type: This field should be SCTP_STREAM_CHANGE_EVENT.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            strchange_flags: This field is formed from the bitwise OR of one or more of the following currently defined flags:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            SCTP_STREAM_CHANGE_DENIED: The corresponding request was denied by the peer.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            SCTP_STREAM_CHANGE_FAILED: The corresponding request failed.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            SCTP_STREAM_CHANGE_DENIED and SCTP_STREAM_CHANGE_FAILED are mutually exclusive. If the request was successful, none of these are set.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            strchange_length: This field is the total length in bytes of the delivered event, including the header.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            strchange_assoc_id: This association id field holds the identifier for the association. All notifications for a given association have the same association identifier. For one-to-one style sockets, this field is ignored.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            strchange_instrms: The number of streams that the peer is allowed to use outbound.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            strchange_outstrms: The number of streams that the endpoint is allowed to use outbound.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            6.2. Event Subscription
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Subscribing to events as described in [RFC6458] uses a setsockopt() call with the SCTP_EVENT socket option. This option takes the following structure, which specifies the association, the event type (using the same value found in the event type field), and an on/off boolean.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   struct sctp_event {
+     sctp_assoc_t se_assoc_id;
+     uint16_t     se_type;
+     uint8_t      se_on;
+   };
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The user fills in the se_type field with the same value found in the strreset_type field, i.e., SCTP_STREAM_RESET_EVENT. The user will also fill in the se_assoc_id field with either the association to set this event on (this field is ignored for one-to-one style sockets) or one of the reserved constant values defined in [RFC6458]. Finally, the se_on field is set with a 1 to enable the event or a 0 to disable the event.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            6.3. Socket Options
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Table 5 describes the new socket options that make the re-configuration features accessible to the user. They all use IPPROTO_SCTP as their level.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            If a call to setsockopt() is used to issue a re-configuration request while the Re-configuration timer is running, setsockopt() will return -1, and error is set to EALREADY.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   +--------------------------+---------------------------+-----+-----+
+   | option name              | data type                 | get | set |
+   +--------------------------+---------------------------+-----+-----+
+   | SCTP_ENABLE_STREAM_RESET | struct sctp_assoc_value   |  X  |  X  |
+   | SCTP_RESET_STREAMS       | struct sctp_reset_streams |     |  X  |
+   | SCTP_RESET_ASSOC         | sctp_assoc_t              |     |  X  |
+   | SCTP_ADD_STREAMS         | struct sctp_add_streams   |     |  X  |
+   +--------------------------+---------------------------+-----+-----+
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-34">
+            Table 5
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            6.3.1. Enable/Disable Stream Reset (SCTP_ENABLE_STREAM_RESET)
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This option allows a user to control whether the SCTP implementation processes or denies incoming requests in STREAM_RESET chunks.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The default is to deny all incoming requests.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            To set or get this option, the user fills in the following structure:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   struct sctp_assoc_value {
+     sctp_assoc_t assoc_id;
+     uint32_t assoc_value;
+   };
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            assoc_id: This parameter is ignored for one-to-one style sockets. For one-to-many style sockets, this parameter indicates which association the user is performing an action upon.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            assoc_value: This field is formed from the bitwise OR of one or more of the following currently defined flags:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            SCTP_ENABLE_RESET_STREAM_REQ: Process received Incoming/Outgoing SSN Reset Requests if this flag is set; deny them if not.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            SCTP_ENABLE_RESET_ASSOC_REQ: Process received SSN/TSN Reset Requests if this flag is set; deny them if not.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            SCTP_ENABLE_CHANGE_ASSOC_REQ: Process received Add Outgoing Streams Requests if this flag is set; deny them if not.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            The default value is !(SCTP_ENABLE_RESET_STREAM_REQ| SCTP_ENABLE_RESET_ASSOC_REQ|SCTP_ENABLE_CHANGE_ASSOC_REQ).
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Please note that using the option does not have any impact on subscribing to any related events.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            6.3.2. Reset Incoming and/or Outgoing Streams (SCTP_RESET_STREAMS)
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This option allows the user to request the reset of incoming and/or outgoing streams.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            To set or get this option, the user fills in the following structure:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   struct sctp_reset_streams {
+     sctp_assoc_t srs_assoc_id;
+     uint16_t srs_flags;
+     uint16_t srs_number_streams;
+     uint16_t srs_stream_list[];
+   };
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            srs_assoc_id: This parameter is ignored for one-to-one style sockets. For one-to-many style sockets, this parameter indicates which association the user is performing an action upon.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            srs_flags: This parameter describes which class of streams is reset. It is formed from the bitwise OR of one or more of the following currently defined flags:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            * SCTP_STREAM_RESET_INCOMING
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-6">
+            * SCTP_STREAM_RESET_OUTGOING
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            srs_number_streams: This parameter is the number of elements in the srs_stream_list. If it is zero, the operation is performed on all streams.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            srs_stream_list: This parameter contains a list of stream identifiers the operation is performed upon. It contains srs_number_streams elements. If it is empty, the operation is performed on all streams. Depending on srs_flags, the identifiers refer to incoming or outgoing streams, or both.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            6.3.3. Reset SSN/TSN (SCTP_RESET_ASSOC)
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This option allows a user to request the reset of the SSN/TSN.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            To set this option, the user provides an option_value of type sctp_assoc_t.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            On one-to-one style sockets, the option_value is ignored. For one-to-many style sockets, the option_value is the association identifier of the association the action is to be performed upon.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            6.3.4. Add Incoming and/or Outgoing Streams (SCTP_ADD_STREAMS)
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This option allows a user to request the addition of a number of incoming and/or outgoing streams.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            To set this option, the user fills in the following structure:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   struct sctp_add_streams {
+     sctp_assoc_t sas_assoc_id;
+     uint16_t sas_instrms;
+     uint16_t sas_outstrms;
+   };
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            sas_assoc_id: This parameter is ignored for one-to-one style sockets. For one-to-many style sockets, this parameter indicates which association the user is performing an action upon.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            sas_instrms: This parameter is the number of incoming streams to add.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            sas_outstrms: This parameter is the number of outgoing streams to add.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            An endpoint can limit the number of incoming and outgoing streams by using the sinit_max_instreams field in the struct sctp_initmsg{} when issuing an SCTP_INIT socket option, as defined in [RFC6458]. An incoming request asking for more streams than allowed will be denied.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            7. Security Considerations
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The SCTP sockets API as described in [RFC6458] exposes the sequence numbers of received DATA chunks to the application. An application might expect them to be monotonically increasing. When using the re-configuration extension, this might no longer be true. Therefore, the applications must enable this extension explicitly before it is used. In addition, applications must subscribe explicitly to notifications related to the re-configuration extension before receiving them.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            SCTP associations are protected against blind attackers by using verification tags. This is still valid when using the re-configuration extension. Therefore, this extension does not add any additional security risk to SCTP in relation to blind attackers.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            When both the SSN and TSN are reset, the maximum segment lifetime is used to avoid TSN wrap-around.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            8. IANA Considerations
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This document (RFC 6525) is the reference for all registrations described in this section. The changes are described below.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            8.1. A New Chunk Type
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            A chunk type has been assigned by IANA. The values given in Table 1 have been used. IANA has assigned this value from the pool of chunks with the upper two bits set to &#39;10&#39;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            This has added a line in the &#34;Chunk Types&#34; registry for SCTP:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Chunk Types
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   ID Value    Chunk Type                                     Reference
+   -----       ----------                                     ---------
+   130         Re-configuration Chunk (RE-CONFIG)             [RFC6525]
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The registration table as defined in [RFC6096] for the chunk flags of this chunk type is empty.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            8.2. Six New Chunk Parameter Types
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Six chunk parameter types have been assigned by IANA. It the values given in Table 2 have been used. IANA has assigned these values from the pool of parameters with the upper two bits set to &#39;00&#39;.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Six additional lines in the &#34;Chunk Parameter Types&#34; registry for SCTP have been added:
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Chunk Parameter Types
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+   ID Value  Chunk Parameter Type                             Reference
+   --------  ------------------------------------------------ ---------
+   13        Outgoing SSN Reset Request Parameter             [RFC6525]
+   14        Incoming SSN Reset Request Parameter             [RFC6525]
+   15        SSN/TSN Reset Request Parameter                  [RFC6525]
+   16        Re-configuration Response Parameter              [RFC6525]
+   17        Add Outgoing Streams Request Parameter           [RFC6525]
+   18        Add Incoming Streams Request Parameter           [RFC6525]
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            9. Acknowledgments
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The authors wish to thank Paul Aitken, Gorry Fairhurst, Tom Petch, Kacheong Poon, Irene Ruengeler, Robin Seggelmann, Gavin Shearer, and Vlad Yasevich for their invaluable comments.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            10. References
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            10.1. Normative References
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC2119] Bradner, S., &#34;Key words for use in RFCs to Indicate Requirement Levels&#34;, BCP 14, RFC 2119, March 1997.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC3758] Stewart, R., Ramalho, M., Xie, Q., Tuexen, M., and P. Conrad, &#34;Stream Control Transmission Protocol (SCTP) Partial Reliability Extension&#34;, RFC 3758, May 2004.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC4960] Stewart, R., Ed., &#34;Stream Control Transmission Protocol&#34;, RFC 4960, September 2007.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC5061] Stewart, R., Xie, Q., Tuexen, M., Maruyama, S., and M. Kozuka, &#34;Stream Control Transmission Protocol (SCTP) Dynamic Address Reconfiguration&#34;, RFC 5061, September 2007.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC6096] Tuexen, M. and R. Stewart, &#34;Stream Control Transmission Protocol (SCTP) Chunk Flags Registration&#34;, RFC 6096, January 2011.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            10.2. Informative References
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            [RFC6458] Stewart, R., Tuexen, M., Poon, K., Lei, P., and V. Yasevich, &#34;Sockets API Extensions for the Stream Control Transmission Protocol (SCTP)&#34;, RFC 6458, December 2011.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h5 class="text mt-2">
+            Appendix A. Examples of the Reconfiguration Procedures
+          </h5>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Please note that this appendix is informational only.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The following message flows between Endpoints E-A and E-Z illustrate the described procedures. The time progresses in downward direction.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The following example illustrates E-A resetting streams 1 and 2 for just its outgoing streams.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+      E-A                                         E-Z
+      ----------[RE-CONFIG(OUT-REQ:X/1,2)]----------&gt;
+      &lt;-------------[RE-CONFIG(RESP:X)]--------------
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The following example illustrates E-A resetting streams 1 and 2 for just its incoming streams.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+      E-A                                         E-Z
+      -----------[RE-CONFIG(IN-REQ:X/1,2)]----------&gt;
+      &lt;--------[RE-CONFIG(OUT-REQ:Y,X/1,2)]----------
+      -------------[RE-CONFIG(RESP:Y)]--------------&gt;
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The following example illustrates E-A resetting all streams in both directions.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+      E-A                                         E-Z
+      -----[RE-CONFIG(OUT-REQ:X,Y-1|IN-REQ:X+1)]----&gt;
+      &lt;------[RE-CONFIG(RESP:X|OUT-REQ:Y,X+1)]-------
+      -------------[RE-CONFIG(RESP:Y)]--------------&gt;
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The following example illustrates E-A requesting that the streams and TSNs be reset. At completion, E-A has the new sending TSN (selected by the peer) of B, and E-Z has the new sending TSN of A (also selected by the peer).
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+      E-A                                         E-Z
+      ------------[RE-CONFIG(TSN-REQ:X)]------------&gt;
+      &lt;-----[RE-CONFIG(RESP:X/S-TSN=A, R-TSN=B)]-----
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The following example illustrates E-A requesting the addition of 3 outgoing streams.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+      E-A                                         E-Z
+      --------[RE-CONFIG(ADD_OUT_STRMS:X/3)]--------&gt;
+      &lt;-------------[RE-CONFIG(RESP:X)]--------------
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            The following example illustrates E-A requesting the addition of 3 incoming streams.
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+          <pre class="text text-monospace">
+      E-A                                         E-Z
+      ---------[RE-CONFIG(ADD_IN_STRMS:X/3)]--------&gt;
+      &lt;----[RE-CONFIG(ADD_OUT_STRMS-REQ:Y,X/3)]------
+      -------------[RE-CONFIG(RESP:Y)]--------------&gt;
+        </pre
+          >
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-0">
+            Authors&#39; Addresses
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Randall R. Stewart Adara Networks Chapin, SC 29036 USA
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            EMail: randall@lakerest.net
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Michael Tuexen Muenster University of Applied Sciences Stegerwaldstr. 39 48565 Steinfurt DE
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            EMail: tuexen@fh-muenster.de
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            Peter Lei Cisco Systems, Inc. 9501 Technology Blvd. West Office Center Rosemont, IL 60018 USA
+          </p>
+        </div>        
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <p class="text indent-3">
+            EMail: peterlei@cisco.com
+          </p>
+        </div>        
+      </div>
+    </div>
+    <div id="rfc_footer"></div>
+  </body>
+</html>
