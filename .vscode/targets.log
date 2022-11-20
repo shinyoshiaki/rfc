@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Wed Nov  2 18:26:40 2022
+# Make data base, printed on Sun Nov 20 17:10:20 2022
 
 # Variables
 
@@ -45,7 +45,7 @@ XDG_DATA_DIRS = /usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/
 # automatic
 %F = $(notdir $%)
 # environment
-VSCODE_CODE_CACHE_PATH = /home/shin/.config/Code/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075
+VSCODE_CODE_CACHE_PATH = /home/shin/.config/Code/CachedData/6261075646f055b99068d3688932416f2346dd3b
 # environment
 LANG = C
 # environment
@@ -57,7 +57,7 @@ XAUTHORITY = /run/user/1000/gdm/Xauthority
 # makefile
 MAKEFLAGS = pqrR
 # environment
-DBUS_STARTER_ADDRESS = unix:path=/run/user/1000/bus,guid=2aa8cf26ae20956c5b1f0af463607e7b
+DBUS_STARTER_ADDRESS = unix:path=/run/user/1000/bus,guid=25f1f97a4d3b96c93de155f3637606be
 # makefile
 CURDIR := /home/shin/Documents/code/webrtc/rfc
 # environment
@@ -83,19 +83,19 @@ MAKEFILE_LIST :=
 # automatic
 @F = $(notdir $@)
 # environment
-VSCODE_PID = 6223
+VSCODE_PID = 95437
 # environment
 XDG_SESSION_TYPE = x11
 # automatic
 ?D = $(patsubst %/,%,$(dir $?))
 # environment
-SESSION_MANAGER = local/shin-ThinkPad:@/tmp/.ICE-unix/2787,unix/shin-ThinkPad:/tmp/.ICE-unix/2787
+SESSION_MANAGER = local/shin-ThinkPad:@/tmp/.ICE-unix/5044,unix/shin-ThinkPad:/tmp/.ICE-unix/5044
 # automatic
 *F = $(notdir $*)
 # environment
 CHROME_DESKTOP = code-url-handler.desktop
 # environment
-DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus,guid=2aa8cf26ae20956c5b1f0af463607e7b
+DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus,guid=25f1f97a4d3b96c93de155f3637606be
 # automatic
 <D = $(patsubst %/,%,$(dir $<))
 # environment
@@ -116,16 +116,18 @@ DOTNET_BUNDLE_EXTRACT_BASE_DIR = /home/shin/.cache/dotnet_bundle_extract
 SHLVL = 0
 # environment
 MAKELEVEL := 0
+# environment
+IM_CONFIG_CHECK_ENV = 1
 # default
 MAKE = $(MAKE_COMMAND)
 # environment
-PATH = /home/shin/.cargo/bin:/home/shin/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/shin/.dotnet/tools:/usr/local/go/bin
+PATH = /home/shin/.local/bin:/home/shin/.cargo/bin:/home/shin/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/shin/.dotnet/tools:/usr/local/go/bin:/usr/local/go/bin
 # default
 MAKEFILES := 
 # automatic
 ^F = $(notdir $^)
 # environment
-INVOCATION_ID = 68272885b10743a58e516af04ebaa70e
+INVOCATION_ID = c576d754497342e295899a90ed143dd4
 # environment
 USERNAME = shin
 # environment
@@ -155,7 +157,7 @@ GIO_LAUNCHED_DESKTOP_FILE = /usr/share/applications/code.desktop
 # makefile
 .DEFAULT_GOAL := 
 # environment
-SYSTEMD_EXEC_PID = 2787
+SYSTEMD_EXEC_PID = 5044
 # environment
 DISPLAY = :1
 # environment
@@ -165,11 +167,11 @@ GTK_MODULES = gail:atk-bridge
 # default
 MAKE_VERSION := 4.3
 # environment
-MANAGERPID = 2189
+MANAGERPID = 2184
 # environment
 DBUS_STARTER_BUS_TYPE = session
 # environment
-GIO_LAUNCHED_DESKTOP_FILE_PID = 32307
+GIO_LAUNCHED_DESKTOP_FILE_PID = 164470
 # environment
 _ = /usr/bin/dbus-update-activation-environment
 # environment
@@ -177,7 +179,7 @@ XDG_RUNTIME_DIR = /run/user/1000
 # environment
 GPG_AGENT_INFO = /run/user/1000/gnupg/S.gpg-agent:0:1
 # environment
-JOURNAL_STREAM = 8:41123
+JOURNAL_STREAM = 8:46480
 # environment
 XDG_SESSION_CLASS = user
 # environment
@@ -189,7 +191,7 @@ QT_IM_MODULE = fcitx
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-VSCODE_IPC_HOOK = /run/user/1000/vscode-34e59779-1.72.2-main.sock
+VSCODE_IPC_HOOK = /run/user/1000/vscode-34e59779-1.73.1-main.sock
 # environment
 IM_CONFIG_PHASE = 1
 # default
@@ -207,7 +209,7 @@ DOTNET_ROOT = /usr/lib/dotnet/dotnet6-6.0.110
 # environment
 GDMSESSION = ubuntu
 # variable set hash-table stats:
-# Load=98/1024=10%, Rehash=0, Collisions=3/125=2%
+# Load=99/1024=10%, Rehash=0, Collisions=3/126=2%
 
 # Pattern-specific Variable Values
 
@@ -273,7 +275,7 @@ GNUmakefile:
 # strcache performance: lookups = 27 / hit rate = 11%
 # hash-table stats:
 # Load=24/8192=0%, Rehash=0, Collisions=0/27=0%
-# Finished Make data base on Wed Nov  2 18:26:40 2022
+# Finished Make data base on Sun Nov 20 17:10:20 2022
 
  
 make: *** No rule to make target 'all'.  Stop.
