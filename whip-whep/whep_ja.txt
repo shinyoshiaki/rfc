@@ -1,0 +1,643 @@
+ワークグループです。ネットワークワーキンググループInternet-Draft:ドラフト・ムリロ・ウエップ01発行されています。2022年10月19日意図した状態。インフォメーショナル期限切れです。2023年4月22日著者紹介
+S.ムリロ
+ミリキャスト
+ 
+C.チェン
+ByteDance（バイトダンス
+WebRTC-HTTP Egressプロトコル(WHEP)
+アブストラクト
+この文書では、WebRTCベースの視聴者がストリーミングサービスやコンテンツデリバリーネットワーク（CDN）、WebRTC伝送ネットワーク（WTN）からコンテンツを視聴できるようにするためのシンプルなHTTPベースのプロトコルを説明します
+
+本メモの位置づけ
+本インターネットドラフトは、BCP78およびBCP79の規定に完全に準拠して提出される
+
+Internet-Draftsは、Internet Engineering Task Force (IETF)の作業文書です。他のグループも作業文書をInternet-Draftsとして配布することがあることに注意してください。現在のInternet-Draftsのリストは、https://datatracker.ietf.org/drafts/current/.あります。
+
+Internet-Drafts は最大6ヶ月間有効なドラフト文書であり、いつでも更新、置き換え、または他の文書に取って代わられる可能性があります。Internet-Draftを参考資料として使用したり、「作業中以外の理由で引用したりすることは不適切です。
+
+このInternet-Draftは2023年4月22日に失効する
+
+著作権について
+Copyright (c) 2022 IETF Trust and the persons identified as the document authors.すべての権利は留保されます
+
+この文書は、この文書の発行日に有効なBCP 78およびIETFトラストのIETF文書に関する法的規定(https://trustee.ietf.org/license-info)に従うものとします。これらの文書は、この文書に関するあなたの権利と制限を記述していますので、注意深く確認してください。この文書から抽出されたコードコンポーネントは、トラスト法的規定のセクション4.eに記載されているように、改訂BSDライセンスのテキストを含まなければならず、改訂BSDライセンスに記載されているように、保証なしで提供されます
+
+▲
+目次
+1.はじめに
+
+2.用語の説明
+
+3.概要
+
+4.プロトコル操作
+
+4.1.WHEPプレーヤーが生成するSDPオファー
+
+4.2.WHEPエンドポイントによって生成されるSDPオファー
+
+4.3.共通手順
+
+4.4.ICEとNATのサポート
+
+4.5.WebRTCの制約
+
+4.6.ロードバランシングとリダイレクション
+
+4.7.STUN/TURNサーバーの構成
+
+4.8.認証と認可
+
+4.9.プロトコル拡張
+
+5.セキュリティに関する考慮事項
+
+6.IANAに関する考察
+
+6.1.WHEP URNサブネームスペースとwhepレジストリの登録
+
+6.2.whepのURNサブネームスペース
+
+6.2.1.仕様書テンプレート
+
+7.謝辞
+
+8.参考文献
+
+8.1.規範となる参考文献
+
+8.2.情報提供のための参考文献
+
+著者の住所
+
+1. はじめに
+IETF RTCWEBワーキンググループは、マルチメディアセッションのセットアップ、管理、ティアダウンを制御するために使用されるメカニズムであるJSEP（[RFC8829]）を標準化しました。また、セッション記述プロトコル（SDP）[RFC3264]を用いたオファー／アンサーモデルを用いたメディアフローのネゴシエーション方法と、有線で送信するデータのフォーマット（メディアタイプ、コーデックのパラメータ、暗号化など）が記述されています。WebRTCは意図的にアプリケーションレベルでのシグナリングトランスポートプロトコルを規定していない。この柔軟性により、さまざまなサービスの実装が可能になった。しかし、これらのサービスは通常、他のサービスとの相互運用性を必要としないスタンドアローンのサイロであり、それらと通信できるツールの存在を活用することはできません
+
+SIP［RFC3261］やXMPP［RFC6120］のように、WebRTCと統合できる標準的なシグナリングプロトコルはあるが、それらは放送・ストリーミングサービスでの使用を想定しておらず、またその業界では採用の兆しもない。RTPをベースとし、機能面でWebRTCに最も近いと思われるRTSP[RFC7826]は、SDPのオファー/アンサーモデル[RFC3264]と互換性がない
+
+そのため、現在のところ、WebRTCを使ってストリーミングサービスからメディアを消費するために設計された標準プロトコルは存在しません
+
+WebRTCを利用したストリーミングサービスからメディアを視聴するための標準プロトコルが存在しないことが問題になっている場面が多々あります
+
+WebRTCのサービスや製品間の相互運用性
+統合が容易なプレーヤーソフトを再利用する
+Dynamic Adaptive Streaming over HTTP（DASH）との連携により、WebRTCでライブストリームを提供しながら、DASHでタイムシフトしたものを提供することができます
+カスタムjavascriptの実行をサポートしないデバイス（テレビなど）でWebRTCストリームを再生する
+この文書は、WebRTC HTTP Ingest Protocol (WHIP)[I-D.draft-ietf-wish-whip]のインジェストを模倣し、WebRTC を使用してストリーミングサービスからメディアを消費するために使用できるシンプルな HTTP ベースのプロトコルを規定しています
+
+2. 用語解説
+本書におけるキーワード「MUST」「MUST NOT」「REQUIRED」「SHALL」「SHALL NOT」「SHOULD」「SHOULD NOT」「RECOMMENDED」「NOT RECOMMENDED」「MAY」「OPTIONAL」は、ここに示すようにすべて大文字で表示される場合にのみBCP14[RFC2119] [RFC8174]に記載されているように解釈するものとします
+
+WHEPプレーヤー。リモートメディアサーバーからメディアを受信してデコードすることで、WHEPプロトコルのクライアントとして動作するWebRTCメディアプレーヤーです
+WHEPエンドポイント。最初のWHEPリクエストを受信するEgressサーバー
+WHEPエンドポイントURL。WHEPリソースを作成するWHEPエンドポイントのURL
+メディアサーバー。WHEPプレーヤーとのメディアセッションを確立し、メディアを配信するWebRTCメディアサーバーまたはコンシューマーです
+WHEPリソース。WHEPリソース：進行中のegressセッションに対してWHEPエンドポイントが割り当てたリソースで、WHEPプレーヤーがセッションを変更するためのリクエストを送信できる（例えば、ICE操作や終了
+WHEPリソースURL。WHEPエンドポイントによって特定のメディアセッションに割り当てられたURLで、セッションの終了やICEの再起動などの操作を実行するために使用できる
+3. 概要
+WebRTC-HTTP Egress Protocol（WHEP）は、WHEP Playerとストリーミングサービスのエンドポイント（Media Server）間でICE/DTLSセッションを確立できるように、HTTP POSTリクエストを使用してシングルショットのSDPオファー/アンサーを実行します
+
+ICE/DTLSセッションがセットアップされると、メディアはMedia ServerからWHEP Playerに一方向に流れます。複雑さを軽減するために、SDPの再ネゴシエーションはサポートされていないため、HTTP上の最初のSDPオファー/アンサーが完了すると、トラックやストリームを追加したり削除したりすることはできません
+
+
+ +-------------+    +---------------+ +--------------+ +---------------+
+ | WHEP Player |    | WHEP Endpoint | | Media Server | | WHEP Resource |
+ +--+----------+    +---------+-----+ +------+-------+ +--------|------+
+    |                         |              |                  |
+    |                         |              |                  |
+    |HTTP POST (SDP Offer)    |              |                  |
+    +------------------------>+              |                  |
+    |201 Created (SDP answer) |              |                  |
+    +<------------------------+              |                  |
+    |          ICE REQUEST                   |                  |
+    +--------------------------------------->+                  |
+    |          ICE RESPONSE                  |                  |
+    |<---------------------------------------+                  |
+    |          DTLS SETUP                    |                  |
+    |<======================================>|                  |
+    |          RTP/RTCP FLOW                 |                  |
+    +<-------------------------------------->+                  |
+    | HTTP DELETE                                               |
+    +---------------------------------------------------------->+
+    | 200 OK                                                    |
+    <-----------------------------------------------------------x
+図1：WHEPセッションのセットアップとティアダウン
+
+代わりに、WHEP PlayerがサービスにSDPオファーを提供することを望む場合 もある(たとえば、オーディオのみがサポートされているときにオーディオとビデオ のセッションを設定するのを避けるため)。この場合、最初のHTTP POSTリクエストにはボディが含まれず、応答には代わりにサービス からのSDPオファーが含まれる。WHEP Playerは、その後のWHEPリソースへのHTTP PATCHリクエストで、SDPアンサーを提供する必要があります
+
+
+ +-------------+    +---------------+ +--------------+ +---------------+
+ | WHEP Player |    | WHEP Endpoint | | Media Server | | WHEP Resource |
+ +--+----------+    +---------+-----+ +------+-------+ +--------|------+
+    |                         |              |                  |
+    |                         |              |                  |
+    |HTTP POST (empty)        |              |                  |
+    +------------------------>+              |                  |
+    |201 Created (SDP offer)  |              |                  |
+    +<------------------------+              |                  |
+    | HTTP PATCH (SDP answer)                |                  |
+    +---------------------------------------------------------->+
+    | 200 OK                                 |                  |
+    <-----------------------------------------------------------x
+    |          ICE REQUEST                   |                  |
+    +--------------------------------------->+                  |
+    |          ICE RESPONSE                  |                  |
+    |<---------------------------------------+                  |
+    |          DTLS SETUP                    |                  |
+    |<======================================>|                  |
+    |          RTP/RTCP FLOW                 |                  |
+    +<-------------------------------------->+                  |
+    | HTTP DELETE                                               |
+    +---------------------------------------------------------->+
+    | 200 OK                                                    |
+    <-----------------------------------------------------------x
+
+図2：WHEPセッションのセットアップとティアダウン
+
+4. プロトコル操作
+4.1. WHEPプレーヤーが生成したSDPオファー
+ストリーミングセッションをセットアップするために、WHEP PlayerはJSEPルールに従ってSDPオファーを生成し、設定されたWHEP Endpoint URLにHTTP POSTリクエストを実行します
+
+HTTP POSTリクエストのコンテンツタイプは「application/sdp」であり、ボディとしてSDPオ ファーが含まれる。WHEPエンドポイントはSDP回答を生成し、コンテンツタイプが「application/sdp」で、ボディとしてSDP回答があり、新しく作成されたリソースを指すLocationヘッダーフィールドがある「201 Created」応答を返す
+
+SDPオファーは「recvonly」属性を使用すべきであり、SDPアンサーは「sendonly」 属性を使用しなければならない[MUST]
+
+POST /whep/endpoint HTTP/1.1
+Host: whep.example.com
+Content-Type: application/sdp
+Content-Length: 1326
+
+v=0
+o=- 5228595038118931041 2 IN IP4 127.0.0.1
+s=-
+t=0 0
+a=group:BUNDLE 0 1
+a=extmap-allow-mixed
+a=msid-semantic: WMS
+m=audio 9 UDP/TLS/RTP/SAVPF 111
+c=IN IP4 0.0.0.0
+a=rtcp:9 IN IP4 0.0.0.0
+a=ice-ufrag:zjkk
+a=ice-pwd:bP+XJMM09aR8AiX1jdukzR6Y
+a=ice-options:trickle
+a=fingerprint:sha-256 DA:7B:57:DC:28:CE:04:4F:31:79:85:C4:31:67:EB:27:58:29:ED:77:2A:0D:24:AE:ED:AD:30:BC:BD:F1:9C:02
+a=setup:actpass
+a=mid:0
+a=bundle-only
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
+a=recvonly
+a=rtcp-mux
+a=rtpmap:111 opus/48000/2
+a=fmtp:111 minptime=10;useinbandfec=1
+m=video 9 UDP/TLS/RTP/SAVPF 96 97
+c=IN IP4 0.0.0.0
+a=rtcp:9 IN IP4 0.0.0.0
+a=ice-ufrag:zjkk
+a=ice-pwd:bP+XJMM09aR8AiX1jdukzR6Y
+a=ice-options:trickle
+a=fingerprint:sha-256 DA:7B:57:DC:28:CE:04:4F:31:79:85:C4:31:67:EB:27:58:29:ED:77:2A:0D:24:AE:ED:AD:30:BC:BD:F1:9C:02
+a=setup:actpass
+a=mid:1
+a=bundle-only
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
+a=extmap:10 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
+a=extmap:11 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
+a=recvonly
+a=rtcp-mux
+a=rtcp-rsize
+a=rtpmap:96 VP8/90000
+a=rtcp-fb:96 ccm fir
+a=rtcp-fb:96 nack
+a=rtcp-fb:96 nack pli
+a=rtpmap:97 rtx/90000
+a=fmtp:97 apt=96
+
+HTTP/1.1 201 Created
+ETag: "xyzzy"
+Content-Type: application/sdp
+Accept-Patch: application/trickle-ice-sdpfrag
+Content-Length: 1400
+Location: https://whep.example.org/resource/id
+
+v=0
+o=- 1657793490019 1 IN IP4 127.0.0.1
+s=-
+t=0 0
+a=group:BUNDLE 0 1
+a=extmap-allow-mixed
+a=ice-lite
+a=msid-semantic: WMS *
+m=audio 9 UDP/TLS/RTP/SAVPF 111
+c=IN IP4 0.0.0.0
+a=rtcp:9 IN IP4 0.0.0.0
+a=ice-ufrag:526be20a538ee422
+a=ice-pwd:2e13dde17c1cb009202f627fab90cbec358d766d049c9697
+a=fingerprint:sha-256 F7:EB:F3:3E:AC:D2:EA:A7:C1:EC:79:D9:B3:8A:35:DA:70:86:4F:46:D9:2D:CC:D0:BC:81:9F:67:EF:34:2E:BD
+a=candidate:1 1 UDP 2130706431 198.51.100.1 39132 typ host
+a=setup:passive
+a=mid:0
+a=bundle-only
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
+a=sendonly
+a=rtcp-mux
+a=rtcp-rsize
+a=rtpmap:111 opus/48000/2
+a=fmtp:111 minptime=10;useinbandfec=1
+a=msid:- d46fb922-d52a-4e9c-aa87-444eadc1521b
+m=video 9 UDP/TLS/RTP/SAVPF 96 97
+c=IN IP4 0.0.0.0
+a=rtcp:9 IN IP4 0.0.0.0
+a=ice-ufrag:526be20a538ee422
+a=ice-pwd:2e13dde17c1cb009202f627fab90cbec358d766d049c9697
+a=fingerprint:sha-256 F7:EB:F3:3E:AC:D2:EA:A7:C1:EC:79:D9:B3:8A:35:DA:70:86:4F:46:D9:2D:CC:D0:BC:81:9F:67:EF:34:2E:BD
+a=candidate:1 1 UDP 2130706431 198.51.100.1 39132 typ host
+a=setup:passive
+a=mid:1
+a=bundle-only
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
+a=extmap:10 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
+a=extmap:11 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
+a=sendonly
+a=rtcp-mux
+a=rtcp-rsize
+a=rtpmap:96 VP8/90000
+a=rtcp-fb:96 ccm fir
+a=rtcp-fb:96 nack
+a=rtcp-fb:96 nack pli
+a=rtpmap:97 rtx/90000
+a=fmtp:97 apt=96
+a=msid:- d46fb922-d52a-4e9c-aa87-444eadc1521b
+
+Figure 3: HTTP POST and PATCH doing SDP O/A example
+
+4.2. WHEPエンドポイントによって生成されるSDPオファー
+WHEPプレーヤーがSDPオファーを生成するためにWHEPエンドポイントを好む場合、WHEPプレーヤーは設定されたWHEPエンドポイントURLにHTTP BODYとAccept HTTP header of "application/sdp" のないPOSTリクエストを送信します
+
+WHEPエンドポイントは、JSEPルールに従ってSDPオファーを生成し、コンテンツタイプが「application/sdp」、ボディとしてSDPオファー、新しく作成されたリソースを指すLocationヘッダーフィールド、WHEPプレーヤーがSDP回答をWHEPリソースに送ることが許される最大時間を示すExpireヘッダーで「201 Created」応答を返す
+
+WHEP Playerは、WHEP Endpointが提供するSDPオファーに対するSDPアンサーを生成し、WHEP ResourceのLocationヘッダーで提供されるURLにHTTP PATCHリクエストを送信しなければならない（MUST）。HTTP PATCHリクエストは、コンテンツタイプが "application/sdp "で、ボディとしてSDPアンサーを含む。SDPオファーがWHEPプレーヤーによって受け入れられなかった場合、WHEP ResourceのURLに対してセッションを終了するためのHTTP DELETE操作を実行しなければならない
+
+この場合、SDPオファーは「sendonly」属性を使用すべきであり、SDPアンサーは 「recvonly」属性を使用しなければならない[MUST]
+
+POST /whep/endpoint HTTP/1.1
+Host: whep.example.com
+Content-Length: 0
+Accept: application/sdp
+
+HTTP/1.1 201 Created
+Content-Type: application/sdp
+Content-Length: 1400
+Location: https://whep.example.com/resource/id
+Expires: Wed, 27 Jul 2022 07:28:00 GMT
+
+v=0
+o=- 5228595038118931041 2 IN IP4 127.0.0.1
+s=-
+t=0 0
+a=group:BUNDLE 0 1
+a=extmap-allow-mixed
+a=msid-semantic: WMS
+m=audio 9 UDP/TLS/RTP/SAVPF 111
+c=IN IP4 0.0.0.0
+a=rtcp:9 IN IP4 0.0.0.0
+a=ice-ufrag:zjkk
+a=ice-pwd:bP+XJMM09aR8AiX1jdukzR6Y
+a=ice-options:trickle
+a=fingerprint:sha-256 DA:7B:57:DC:28:CE:04:4F:31:79:85:C4:31:67:EB:27:58:29:ED:77:2A:0D:24:AE:ED:AD:30:BC:BD:F1:9C:02
+a=setup:actpass
+a=mid:0
+a=bundle-only
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
+a=sendonly
+a=msid:- d46fb922-d52a-4e9c-aa87-444eadc1521b
+a=rtcp-mux
+a=rtpmap:111 opus/48000/2
+a=fmtp:111 minptime=10;useinbandfec=1
+m=video 9 UDP/TLS/RTP/SAVPF 96 97
+c=IN IP4 0.0.0.0
+a=rtcp:9 IN IP4 0.0.0.0
+a=ice-ufrag:zjkk
+a=ice-pwd:bP+XJMM09aR8AiX1jdukzR6Y
+a=ice-options:trickle
+a=fingerprint:sha-256 DA:7B:57:DC:28:CE:04:4F:31:79:85:C4:31:67:EB:27:58:29:ED:77:2A:0D:24:AE:ED:AD:30:BC:BD:F1:9C:02
+a=setup:actpass
+a=mid:1
+a=bundle-only
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
+a=extmap:10 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
+a=extmap:11 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
+a=sendonly
+a=msid:- d46fb922-d52a-4e9c-aa87-444eadc1521b
+a=rtcp-mux
+a=rtcp-rsize
+a=rtpmap:96 VP8/90000
+a=rtcp-fb:96 ccm fir
+a=rtcp-fb:96 nack
+a=rtcp-fb:96 nack pli
+a=rtpmap:97 rtx/90000
+a=fmtp:97 apt=96
+
+PATCH /resource/id HTTP/1.1
+Host: whep.example.com
+Content-Type: application/sdp
+Content-Length: 1326
+
+v=0
+o=- 1657793490019 1 IN IP4 127.0.0.1
+s=-
+t=0 0
+a=group:BUNDLE 0 1
+a=extmap-allow-mixed
+a=ice-lite
+a=msid-semantic: WMS *
+m=audio 9 UDP/TLS/RTP/SAVPF 111
+c=IN IP4 0.0.0.0
+a=rtcp:9 IN IP4 0.0.0.0
+a=ice-ufrag:526be20a538ee422
+a=ice-pwd:2e13dde17c1cb009202f627fab90cbec358d766d049c9697
+a=fingerprint:sha-256 F7:EB:F3:3E:AC:D2:EA:A7:C1:EC:79:D9:B3:8A:35:DA:70:86:4F:46:D9:2D:CC:D0:BC:81:9F:67:EF:34:2E:BD
+a=candidate:1 1 UDP 2130706431 198.51.100.1 39132 typ host
+a=setup:passive
+a=mid:0
+a=bundle-only
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
+a=recvonly
+a=rtcp-mux
+a=rtcp-rsize
+a=rtpmap:111 opus/48000/2
+a=fmtp:111 minptime=10;useinbandfec=1
+m=video 9 UDP/TLS/RTP/SAVPF 96 97
+c=IN IP4 0.0.0.0
+a=rtcp:9 IN IP4 0.0.0.0
+a=ice-ufrag:526be20a538ee422
+a=ice-pwd:2e13dde17c1cb009202f627fab90cbec358d766d049c9697
+a=fingerprint:sha-256 F7:EB:F3:3E:AC:D2:EA:A7:C1:EC:79:D9:B3:8A:35:DA:70:86:4F:46:D9:2D:CC:D0:BC:81:9F:67:EF:34:2E:BD
+a=candidate:1 1 UDP 2130706431 198.51.100.1 39132 typ host
+a=setup:passive
+a=mid:1
+a=bundle-only
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
+a=extmap:10 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
+a=extmap:11 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
+a=recvonly
+a=rtcp-mux
+a=rtcp-rsize
+a=rtpmap:96 VP8/90000
+a=rtcp-fb:96 ccm fir
+a=rtcp-fb:96 nack
+a=rtcp-fb:96 nack pli
+a=rtpmap:97 rtx/90000
+a=fmtp:97 apt=96
+
+HTTP/1.1 204 No Content
+ETag: "xyzzy"
+
+図4：SDP O/Aを行うHTTP POSTとPATCHの例
+Expire ヘッダーの HTTP POST 応答で示される時間までに、WHEP Resource が HTTP PATCH 要求を受け取らない場合、リソースを削除し、その後受け取った WHEP Resource URL への要求に対して 404 Not Found 応答で応答するべきであ (SHOULD)。
+
+4.3. 共通手順
+WHEPリソースは、WHEPプレーヤーがストリームの視聴を開始できるようにするために、ライブパブリッシングが起こっていることを要求することができる。 その場合、WHEPリソースは、新しいリクエストを送るまでの秒数を示すRetry-AfterヘッダでWHEPクライアントが発行したPOSTリクエストに対して「409 Conflict」レスポンスを返すものとする。 WHEPプレイヤーは、"409 Conflict "応答のRetry-Afterヘッダー値の初期値で、指数関数バックオフ期間でWHEP Resourceへの接続を定期的に試みてもよい
+
+セッションが設定されると、ICE consent freshness[RFC7675]を使用して、突然の切断を検出し、いずれかの側によるセッション終了のためのDTLS teardownが行われます
+
+セッションを明示的に終了させるために、WHEP Playerは最初のHTTP POSTのLocationヘッダーフィールドで返されたリソースURLに対してHTTP DELETEリクエストを実行しなければなりません（MUST）。HTTP DELETEリクエストを受信すると、WHEPリソースは削除され、メディアサーバー上のリソースが解放され、ICEとDTLSのセッションが終了します
+
+セッションを終了するメディアサーバーは、同意の即時失効のために[RFC7675]5.2項の手順に従わなければならない（MUST）
+
+WHEPエンドポイントは、このプロトコル仕様の将来のバージョンのためにその使用を確保するために、エンドポイントURLのすべてのHTTP GET、HEADまたはPUTリクエストに対して「405 Method Not Allowed」応答を返さなければなりません
+
+WHIPエンドポイントは、[FETCH]で定義されたCORS（Cross-Origin Resource Sharing）のためのOPTIONSリクエストをサポートしなければならず、[W3C.REC-ldp-20150226]に従って受信した任意のOPTIONSリクエストに対する「200 OK」応答上にmime type value of "application/sdp" と "Accept-Post" headerを含めるべきである（SHOULD）」。
+
+WHEPリソースは、このプロトコル仕様の将来のバージョンのためにその使用を確保するために、リソースURLのすべてのHTTP GET、HEAD、POSTまたはPUTリクエストに対して「405 Method Not Allowed」を返さなければなりません（MUST）
+
+4.4. ICEとNATのサポート
+WHEP Playerが提供するSDPは、ICE候補の完全なリストを含むICE収集が完了した後に送信してもよい[MAY]か、または[RFC8863]に従ってローカル候補のみを含んでもよい（または候補の空リストでもよい）[]。
+
+プロトコルを簡略化するために、SDP回答が送信されると、メディアサーバーの ICE候補から収集したトリクル候補を交換することはサポートされていな い。WHEPエンドポイントは、クライアントリクエストに応答する前に、メディア サーバーのすべてのICE候補を収集しなければならず[SHALL]、SDPアンサーにはメ ディアサーバーのICE候補の完全なリストが含まれる[SHALL]。Media ServerはICE liteを使用してもよいが、WHEPプレーヤーは完全なICEを実装しなければならない MUST）。
+
+トリクルICEとICEリスタートのサポートはWHEPリソースのオプションです
+
+WHEPリソースがTrickle ICEまたはICEリスタートをサポートする場合、WHEPプレーヤーは[RFC5789]セクション3.1WHEPリソースを作成するPOSTリクエストの「201 Created」にmime type値が「application/trickle-ice-sdpfrag」である「Accept-Patch」ヘッダーを含めなければなりません。
+
+WHEPリソースがTrickle ICEまたはICE restartsのどちらかをサポートし、両方をサポートしない場合、サポートされないHTTP PATCHリクエストに対して「405 Not Implemented」レスポンスを返さなければなりませ (¶)。
+
+WHEPリソースが何らかの目的でPATCHメソッドをサポートしない場合、[RFC9110]セクション6.6.2説明されているように、「501 Not Implemented」レスポンスを返さなければならない（MUST）。
+
+WHEPプレーヤーが送信したHTTP PATCHリクエストはWHEP Resourceによって順番外に受信される可能性があるため、WHEP Resourceは[RFC9110]セクション2.3に従ってICEセッションを識別するユニークで強いエンティティタグを生成しなければならない（MUST）。最初のICEセッションを特定するエンティティタグの初期値は、WHEPプレーヤー がSDPオファーラーとして動作している場合は、WHEPエンドポイントへの最初の POSTリクエストに対する「201 Created」応答で、それ以外の場合はSDPアンサーを含むHTTP PATCH応答で、ETagヘッダーフィールドに返さなければならない[MUST]。また、ICEの再起動をトリガーするPATCHリクエストの「200 OK」でも返されなければならない[MUST]。元の「201 Created」応答にETagを含めることは、WHEPリソースがICE再起動をサポートしている場合にのみ要求され、それ以外の場合はオプションであることに注意
+
+トリクルICEを実行するためにPATCHリクエストを送信するWHEP Playerは、[RFC9110]3.1項に従って最新の既知のentity-tagを持つ「If-Match」ヘッダーフィールドを含めなければならない。PATCHリクエストがWHEPリソースによって受信されると、それは[RFC9110]セクション3.1に従って、示されたentity-tag値をリソースの現在のentity-tagと比較し、それらが一致しない場合は「412 Precondition Failed」応答を返さなければなりません
+
+WHEPプレーヤーは、セッションを終了するためにDELETEリクエストを開始するときなど、特定のICEセッションのマッチングが必要でないときは、エンティティタグ検証を使用すべきではない SHOULD NOT）。
+
+新しいICE候補を含むPATCHリクエストを受信したWHEP Resourceは、ICEの再起動を実行しない場合、ボディなしで「204 No Content」レスポンスを返さなければなりません。メディアサーバーが候補のトランスポートをサポートしないか、接続アドレスを解決できない場合、204レスポンスでHTTPリクエストを受け入れ、候補を静かに破棄しなければなりません
+
+PATCH /resource/id HTTP/1.1
+Host: whep.example.com
+If-Match: "38sdf4fdsf54:EsAw"
+Content-Type: application/trickle-ice-sdpfrag
+Content-Length: 548
+
+a=ice-ufrag:EsAw
+a=ice-pwd:P2uYro0UCOQ4zxjKXaWCBui1
+m=audio RTP/AVP 0
+a=mid:0
+a=candidate:1387637174 1 udp 2122260223 192.0.2.1 61764 typ host generation 0 ufrag EsAw network-id 1
+a=candidate:3471623853 1 udp 2122194687 198.51.100.1 61765 typ host generation 0 ufrag EsAw network-id 2
+a=candidate:473322822 1 tcp 1518280447 192.0.2.1 9 typ host tcptype active generation 0 ufrag EsAw network-id 1
+a=candidate:2154773085 1 tcp 1518214911 198.51.100.2 9 typ host tcptype active generation 0 ufrag EsAw network-id 2
+a=end-of-candidates
+
+HTTP/1.1 204 No Content
+
+図5：Trickle ICEリクエスト
+
+ICE restart を実行するために PATCH リクエストを送信する WHEP Player は、[RFC9110]の3.1節にあるように、フィールド値「*」を持つ「If-Match」ヘッダーフィールドを含まなければならない。
+
+HTTP PATCHリクエストの結果、ICEが再起動した場合、WHEPリソースは新しいICEユーザー名フラグメントとパスワードを含む「application/trickle-ice-sdpfrag」ボディで「200 OK」を返すものとします。応答は、オプションでメディアサーバーの新しいICE候補のセットと、ETag応答ヘッダーフィールドの新しいICEセッションに対応する新しいエンティティタグを含むかもしれません
+
+ICEリクエストがWHEPリソースによって満たされない場合、WHEPリソースは新しいICEユーザー名フラグメントとパスワードを含む「application/trickle-ice-sdpfrag」ボディで「200 OK」を返さなければなりません（SHALL）。また、ICEの再起動に成功した場合の「200 OK」応答は、ETag応答ヘッダーフィールドに新しいICEセッションに対応する新しいエンティティタグを含まなければならず、メディアサーバーのための新しいICE候補のセットを含んでもよい
+
+PATCH /resource/id HTTP/1.1
+Host: whep.example.com
+If-Match: "*"
+Content-Type: application/trickle-ice-sdpfrag
+Content-Length: 54
+
+a=ice-ufrag:ysXw
+a=ice-pwd:vw5LmwG4y/e6dPP/zAP9Gp5k
+
+HTTP/1.1 200 OK
+ETag: "289b31b754eaa438:ysXw"
+Content-Type: application/trickle-ice-sdpfrag
+Content-Length: 102
+
+a=ice-lite
+a=ice-ufrag:289b31b754eaa438
+a=ice-pwd:0b66f472495ef0ccac7bda653ab6be49ea13114472a5d10a
+
+図6：ICE再起動要求
+
+WHEP Playerは新しいICE候補を送信するためにICEセッションに関連するエンティティタグを知る必要があるため、新しいエンティティタグ値を持つ最初のPOSTリクエストまたはPATCHリクエストに対するHTTPレスポンスを受け取る前に、集まった候補をバッファリングしなければなりません（MUST）。エンティティタグの値を知ったら、WHEP PlayerはこれまでにバッファリングしたすべてのICE候補を含む単一の集約されたHTTP PATCHリクエストを送信すべきです
+
+不安定なネットワーク状態の場合、ICE 再起動 HTTP PATCH リクエストとレスポンスが順番通りに受信されないことがあります。このシナリオを緩和するために、クライアントがICE再起動を実行するとき、以前のice username/pwd fragsを破棄し、保留中のHTTP PATCHリクエストから受け取ったそれ以降のHTTP PATCHレスポンスを無視しなければなりません（MUST）。クライアントは、最後に送信されたリクエストに対するレスポンスで受け取ったICE情報のみを適用しなければならない(MUST)。クライアントとサーバーのICE情報の間に不一致がある場合（アウトオブオーダーのリクエストのため）、STUNリクエストは無効なICE情報を含み、サーバーによって拒否される。この状況がWHEP Playerによって検出された場合、WHEP Playerはサーバーに新しいICE再起動要求を送信すべきです
+
+4.5. WebRTCの制約
+ストリーミングサービスからのメディア消費の特定のケースでは、WebRTC-gateway文書[I-D.draft-ietf-rtcweb-gateways]で詳述されているように、サーバー側についていくつかの仮定を行うことができ、WebRTCコンプライアンスの負荷を単純化します
+
+プレーヤーとメディアサーバーの両方でWHEPを実装する複雑さを軽減するために、WHEPはWebRTCの使用に関して以下の制限を課している
+
+WHEP PlayerとWHEP Endpointの両方がSDPバンドル[RFC9143]を使用しなければならない（SHALL）。各「m=」セクションは、1つのBUNDLEグループの一部でなければならない (MUST)。したがって、WHEPプレーヤーまたはWHEPエンドポイントがSDPオファーを送信するとき、バンドルされた各「m=」セクションに「bundle-only」属性を含めなければならない(MUST)。WHEPプレーヤーとメディアサーバーは、[RFC9143]セクション9に従って、BUNDLEグループに関連する多重化メディアをサポートしなければならない[MUST]。さらに、[RFC9143]に従い、WHEPプレーヤーとメディアサーバーは、すべてのバンドルメディアに対してRTP/RTCP多重化を使用します。WHEP Player and Media Serverは、[RFC8858]に従い、各バンドルされた「m=」セクションに「rtcp-mux-only」属性を含めるべきである（SHOULD）
+
+WHEPプレーヤーがストリームの視聴を開始するときに、あるストリームのコーデックがメディアサーバーによって知られていない可能性があるため、WHEPエンドポイントがSDP回答者として動作する場合、SDP回答にサポートするすべての提供コーデックを含めなければならず、実際に送信されるコーデックを仮定してはならない MUST）¶。
+
+トリクルICEとICEリスタートのサポートは、4.1節で説明したように、WHEPプレーヤーとメディアサーバーの両方においてオプションです。
+
+4.6. ロードバランシングとリダイレクション
+WHEPエンドポイントおよびメディアサーバーは同じサーバーに同居していないかもしれないので、異なるメディアサーバーへの着信リクエストをロードバランスすることが可能である。WHEPプレイヤーは[RFC9110]セクション6.4.7で説明されているように、"307 Temporary Redirect "レスポンスを介してHTTPリダイレクトをサポートしなければならない（SHALL）。WHEPリソースURLは最終的なものでなければならず、それに送られるPATCHとDELETEリクエストに対してリダイレクトがサポートされる必要はありません
+
+高負荷の場合、WHEPエンドポイントは、一時的な過負荷や予定されたメンテナンスのためにサーバーが現在リクエストを処理できないことを示す「503 Service Unavailable」応答を返してもよい（ただし、ある程度の遅延後に軽減される可能性がある）。WHEPエンドポイントは、ユーザーエージェントがフォローアップリクエストを行う前に待つべき最小時間を示すRetry-Afterヘッダーフィールドを送ってもよい
+
+4.7. STUN/TURNサーバーの構成
+WHEPエンドポイントは、WHEPエンドポイントURLへのHTTP POSTリクエストに対する「201 Created」レスポンスで、クライアントが使用可能なSTUN/TURNサーバー設定URLと認証情報を返してもよい（MAY）
+
+各STUN/TURNサーバーは、[I-D.draft-ietf-wish-whip]で規定されているように、"ice-server "のrel属性値を持つ "Link "ヘッダーフィールド[RFC8288]で返されます
+
+また、STUN/TURNサーバーのURLは、WHEP Endpointが提供する値を上書きして、WHEP Player上で放送サービスまたは外部のTURNプロバイダーが提供する長期認証情報で構成することも可能かもしれません
+
+4.8. 認証と認可
+WHEPエンドポイントとリソースは、[RFC6750]セクション2.1に規定されているように、Bearerトークンを持つHTTP Authorizationヘッダーフィールドを使用して認証されるようHTTPリクエストを要求してもよい(MAY)。WHEPプレイヤーはこの認証と認可のメカニズムを実装し、CORSのためのプリフライトOPTIONSリクエストを除くWHEPエンドポイントまたはリソースのいずれかに送られるすべてのHTTPリクエストでHTTP Authorizationヘッダーフィールドを送信しなければなりませ(¶)。
+
+ベアラートークンの性質、構文、およびセマンティクス、ならびにそれをクライアントに配布する方法については、本書の範囲外である。使用できるトークンの種類の例としては、[RFC6750]および[RFC8725]に基づくJWTトークン、またはデータベースに格納された共有秘密があるが、これらに限定されない
+
+WHEPエンドポイントやリソースは、代わりにWHEPエンドポイントやリソースのURL内に認証トークンをエンコードすることによって、認証と認可を実行することができます。WHEP Playerがベアラートークンを使用するように設定されていない場合、HTTP Authorizationヘッダーフィールドは、いかなるリクエストにおいても送信してはならない
+
+4.9. プロトコルの拡張
+WHEPプロトコルで定義される将来の拡張をサポートするために、新しい拡張を登録し、発表するための共通の手順が定義されています
+
+WHEPサーバーがサポートするプロトコル拡張は、WHEPエンドポイントに送られた最初のHTTP POSTリクエストに対する「201 Created」レスポンスでWHEP Playerにアドバタイズされなければならない（MUST）。WHEPエンドポイントは、拡張子の "rel "タイプ属性と、その拡張子に関連するリクエストを受け取るために利用できるようになるHTTPリソースのURIを持つ、各拡張子のための1つの "Link "ヘッダーフィールドを返さなければなりませ (¶)。
+
+プロトコル拡張はWHEP PlayersとWHEP Endpoints and Resourcesの両方にとってオプションである。WHEP Playersは未知の "rel "属性値を持つLink属性を無視しなければならず、WHEP EndpointsとResourcesは拡張機能の使用を要求してはならない MUST NOT）。
+
+各プロトコル拡張は，プレフィックスで始まるユニークな "rel "属性値をIANAに登録しなければならない（MUST）。"urn:ietf:params:whep:ext"（6.2 節に規定）の接頭辞で始まる一意のrel属性値を登録しなければならない。
+
+例えば、https://html.spec.whatwg.org/multipage/server-sent-events.html#server-sent-events で規定されているような、サーバー送信イベントを用いたサーバー間通信の拡張の可能性を考えると、公開ストリームのサーバー側イベントリソースに接続するための URL は、最初の HTTP "201 Created" 応答で "Link" ヘッダーフィールドと "rel" 属性が "urn:ietf:params:whep:ext:example:server-sent-events" として返せるだろう。(本文書ではこのような拡張子は指定せず、例としてのみ使用する。¶。
+
+この理論的なケースでは、HTTP POSTリクエストに対する「201 Created」レスポンスは、次のようになります
+
+HTTP/1.1 201 Created Content-Type: application/sdp Location: https://whep.example.org/resource/id Link: <https://whep.ietf.org/publications/213786HF/sse>; rel="urn:ietf:params:whep:ext:example:server-side-event"
+5. セキュリティに関する考慮事項
+WebRTCのセキュリティモデルを維持するために、HTTPSを使用しなければならない（SHALL）
+
+6. IANAに関する考察
+本仕様では、WHEPプロトコル拡張のためのURNサブネームスペースのレジストリを追加します
+
+6.1. WHEP URNサブネームスペースとwhepレジストリの登録
+IANAは、"IETF URN Sub-namespace for Registered Protocol Parameter Identifiers" レジストリにエントリを追加し、[RFC3553]に従って登録済みパラメータ識別子のサブネームスペースを作成した。"urn:ietf:params:whep"作成しました。
+
+このサブ名前空間を管理するために、IANAは "System for Cross-domain Identity Management (WHEP) Schema URIs "レジストリを作成し、"urn:ietf:pars:whep "名前空間内のエントリーの管理に使用しています。 レジストリの説明は以下の通りです
+
+レジストリ名：WHEPウェップ
+仕様：本書（RFC TBD¶。
+リポジトリーです。セクションセクション6.2参照
+インデックス値。セクション6. ¶を参照
+6.2. whepのURNサブネームスペース
+本節では、whep 仕様および将来の拡張機能で使用するための IETF URN Sub-namespace を作成し登録する
+
+6.2.1. 仕様書テンプレート
+名前空間IDです。
+
+  NamespaceID「whep」が付与されました。
+登録情報
+
+  Version: 1 Date:未定
+ネームスペースの登録者宣言
+
+  インターネット・エンジニアリング・タスク・フォース（Internet Engineering Task Force）。
+指定された連絡先
+
+   指定された専門家がwhep公開メーリングリスト、「wish@ietf.org」を監視することになります。
+構文構造の宣言
+
+  whep "名前空間IDを使用するすべてのURNの名前空間固有文字列（NSS）は、次の構造を持たなければならない： urn:ietf:params:whep:{type}:{name}:{other} キーワードは、次の意味を持つ： - type:type エンティティタイプ。この仕様では "ext "タイプのみを定義する。 - name: URN構文要件({{RFC8141}}参照)に準拠し、whepプロトコル拡張の主要な名前空間を定義する必須のUS-ASCII文字列である。値は業界名または組織名でもよい(MAY)。その他: URN構文要件({{RFC8141}}参照)に準拠し、whepプロトコル拡張を一意に識別するために必要なサブネームスペースを定義する任意のUS-ASCII文字列(コロンで区切ってさらにネームスペースに分解してもよい)。
+関連する付属書類
+
+  なし
+識別子の一意性についての考察
+
+  指定された担当者は、独自性の確認と実施に責任を持つものとする。
+識別子の永続性に関する考察
+
+  一度割り当てられた名前は，別の目的のために再割り当てしてはならない（MUST NOT）。 サブ名前空間内の値の割り当てに提供される規則は，値の意味が変更できないように構築されなければならない（MUST）。 この登録メカニズムは，意味が時間とともに変化する可能性がある値の命名には適切ではない。
+識別子の割り当てのプロセス
+
+  タイプ "ext" の名前空間（例："urn:ietf:params:whep:ext"）は、IETF 承認の whep 仕様用に予約されています。
+識別子の解決のプロセス
+
+  指定なし。
+レキシカル・イコライゼンスのルール
+
+  特別な考慮はなく、{{RFC8141}}で指定された字句の等価性に関する規則が適用される。
+URN構文への適合性
+
+  特に考慮することはありません。
+バリデーションの仕組み
+
+  指定なし。
+スコープ
+
+  グローバルです。
+7. 謝辞
+8. 参考資料
+8.1. 規範となる参考文献
+[FETCH】です。］
+WHATWG、「Fetch - Living Standard」、n.d. 、<https://fetch.spec.whatwg.org>。
+[RFC2119] を参照してください。
+Bradner, S.,"Key words for use in RFC to Indicate Requirement Levels",BCP 14,RFC 2119,DOI 10.17487/RFC2119,March 1997,<https://www.rfc-editor.org/info/rfc2119>.
+[RFC3264】を参照してください。］
+Rosenberg, J.andH. Schulzrinne,"An Offer/Answer Model with Session Description Protocol (SDP)",RFC 3264,DOI 10.17487/RFC3264,June 2002,<https://www.rfc-editor.org/info/rfc3264>.
+[RFC3553】を参照してください。］
+Mealling, M.,Masinter, L.,Hardie, T., andG. Klyne,"An IETF URN Sub-namespace for Registered Protocol Parameters",BCP 73,RFC 3553,DOI 10.17487/RFC3553,June 2003,<https://www.rfc-editor.org/info/rfc3553>.
+[RFC5789】を参照してください。］
+Dusseault, L.andJ. Snell,"PATCH Method for HTTP",RFC 5789,DOI 10.17487/RFC5789,March 2010,<https://www.rfc-editor.org/info/rfc5789>.
+[RFC6750】を参照してください。］
+Jones, M.andD. Hardt,"The OAuth 2.0 Authorisation Framework:Bearer Token Usage",RFC 6750,DOI 10.17487/RFC6750,October 2012,<https://www.rfc-editor.org/info/rfc6750>.
+[RFC7675】を参照してください。］
+Perumal, M.,Wing, D.,Ravindranath, R.,Reddy, T., andM. Thomson,"Session Traversal Utilities for NAT (STUN) Usage for Consent Freshness",RFC 7675,DOI 10.17487/RFC7675,October 2015,<https://www.rfc-editor.org/info/rfc7675>.
+[RFC8174】を参照してください。］
+Leiba, B.,"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words",BCP 14,RFC 8174,DOI 10.17487/RFC8174,May 2017,<https://www.rfc-editor.org/info/rfc8174>.
+[RFC8288】を参照してください。］
+Nottingham, M.,"Web Linking",RFC 8288,DOI 10.17487/RFC8288,October 2017,<https://www.rfc-editor.org/info/rfc8288>.
+[RFC8725】を参照してください。］
+Sheffer, Y.,Hardt, D., andM. Jones,"JSON Web Token Best Current Practices",BCP 225,RFC 8725,DOI 10.17487/RFC8725,February 2020,<https://www.rfc-editor.org/info/rfc8725>.
+[RFC8829】を参照してください。］
+Uberti, J.,Jennings, C., andE. Rescorla, Ed.,"JavaScript Session Establishment Protocol (JSEP)",RFC 8829,DOI 10.17487/RFC8829,January 2021,<https://www.rfc-editor.org/info/rfc8829>.
+[RFC8858】を参照してください。］
+Holmberg, C.,"Indicating Exclusive Support of RTP and RTP Control Protocol (RTCP) Multiplexing Using Session Description Protocol (SDP)",RFC 8858,DOI 10.17487/RFC8858,January 2021,<https://www.rfc-editor.org/info/rfc8858>.
+[RFC8863】を参照してください。］
+Holmberg, C.andJ. Uberti,"Interactive Connectivity Establishment Patiently Awaiting Connectivity (ICE PAC)",RFC 8863,DOI 10.17487/RFC8863,January 2021,<https://www.rfc-editor.org/info/rfc8863>.
+[RFC9110】を参照してください。］
+Fielding, R., Ed.,Nottingham, M., Ed., andJ. Reschke, Ed.,"HTTP Semantics",STD 97,RFC 9110,DOI 10.17487/RFC9110,June 2022,<https://www.rfc-editor.org/info/rfc9110>.
+[RFC9143】を参照してください。］
+Holmberg, C.,Alvestrand, H., andC. Jennings,"Negotiating Media Multiplexing Using Session Description Protocol (SDP)",RFC 9143,DOI 10.17487/RFC9143,February 2022,<https://www.rfc-editor.org/info/rfc9143>.
+[W3C.REC-ldp-20150226]
+Malhotra, A., Ed.,Arwe, J., Ed., andS. Speicher, Ed.,"Linked Data Platform 1.0",W3C REC-ldp-20150226,W3C REC-ldp-20150226,26 February 2015,<https://www.w3.org/TR/2015/REC-ldp-20150226/>.
+8.2. 参考文献
+[I-D.draft-ietf-rtcweb-gateways] を参照してください。
+Alvestrand, H. T.andU. Rauschenbach,"WebRTC Gateways",Work in Progress , Internet-Draft, draft-ietf-rtcweb-gateways-02,21 January 2016,<https://www.ietf.org/archive/id/draft-ietf-rtcweb-gateways-02.txt>.
+[I-D.draft-ietf-wish-whip] です。
+Murillo, S. G. andA. Gouaillard,"WebRTC-HTTP ingestion protocol (WHIP)",Work in Progress , Internet-Draft, draft-ietf-wish-whip-05,19 October 2022,<https://www.ietf.org/archive/id/draft-ietf-wish-whip-05.txt>.
+[RFC3261】を参照してください。］
+Rosenberg, J.,Schulzrinne, H.,Camarillo, G.,Johnston, A.,Peterson, J.,Sparks, R.,Handley, M., andE. Schooler,"SIP:Session Initiation Protocol",RFC 3261,DOI 10.17487/RFC3261,June 2002,<https://www.rfc-editor.org/info/rfc3261>.
+[RFC6120】を参照してください。］
+Saint-Andre, P.,"Extensible Messaging and Presence Protocol (XMPP):Core",RFC 6120,DOI 10.17487/RFC6120,March 2011,<https://www.rfc-editor.org/info/rfc6120>.
+[RFC7826】を参照してください。］
+Schulzrinne, H.,Rao, A.,Lanphier, R.,Westerlund, M., andM. Stiemerling, Ed.,"Real-Time Streaming Protocol Version 2.0",RFC 7826,DOI 10.17487/RFC7826,December 2016,<https://www.rfc-editor.org/info/rfc7826>.
+[RFC8141】を参照してください。］
+Saint-Andre, P.andJ. Klensin,"Uniform Resource Names (URNs)",RFC 8141,DOI 10.17487/RFC8141,April 2017,<https://www.rfc-editor.org/info/rfc8141>.
+著者の住所
+セルヒオ・ガルシア・ムリーリョ
+ミリキャスト
+メール：sergio.garcia.murillo@cosmosoftware.io
+チェン・チェン
+ByteDance（バイトダンス
+メール：webrtc@bytedance.com
