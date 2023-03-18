@@ -88,12 +88,13 @@ Dynamic Adaptive Streaming over HTTP（DASH）との連携により、WebRTCで�
 2. 用語解説
 本書におけるキーワード「MUST」「MUST NOT」「REQUIRED」「SHALL」「SHALL NOT」「SHOULD」「SHOULD NOT」「RECOMMENDED」「NOT RECOMMENDED」「MAY」「OPTIONAL」は、ここに示すようにすべて大文字で表示される場合にのみBCP14[RFC2119] [RFC8174]に記載されているように解釈するものとします
 
-WHEPプレーヤー。リモートメディアサーバーからメディアを受信してデコードすることで、WHEPプロトコルのクライアントとして動作するWebRTCメディアプレーヤーです
-WHEPエンドポイント。最初のWHEPリクエストを受信するEgressサーバー
-WHEPエンドポイントURL。WHEPリソースを作成するWHEPエンドポイントのURL
-メディアサーバー。WHEPプレーヤーとのメディアセッションを確立し、メディアを配信するWebRTCメディアサーバーまたはコンシューマーです
-WHEPリソース。WHEPリソース：進行中のegressセッションに対してWHEPエンドポイントが割り当てたリソースで、WHEPプレーヤーがセッションを変更するためのリクエストを送信できる（例えば、ICE操作や終了
+WHEPプレーヤー: リモートメディアサーバーからメディアを受信してデコードすることで、WHEPプロトコルのクライアントとして動作するWebRTCメディアプレーヤーです
+WHEPエンドポイント: 最初のWHEPリクエストを受信するEgressサーバー
+WHEPエンドポイントURL: WHEPリソースを作成するWHEPエンドポイントのURL
+メディアサーバー: WHEPプレーヤーとのメディアセッションを確立し、メディアを配信するWebRTCメディアサーバーまたはコンシューマーです
+WHEPリソース：進行中のegressセッションに対してWHEPエンドポイントが割り当てたリソースで、WHEPプレーヤーがセッションを変更するためのリクエストを送信できる（例えば、ICE操作や終了
 WHEPリソースURL。WHEPエンドポイントによって特定のメディアセッションに割り当てられたURLで、セッションの終了やICEの再起動などの操作を実行するために使用できる
+
 3. 概要
 WebRTC-HTTP Egress Protocol（WHEP）は、WHEP Playerとストリーミングサービスのエンドポイント（Media Server）間でICE/DTLSセッションを確立できるように、HTTP POSTリクエストを使用してシングルショットのSDPオファー/アンサーを実行します
 
