@@ -180,7 +180,9 @@ STUNはクライアント・サーバー・プロトコルである。これは2
 
 本書は、"Binding "と呼ばれる単一のメソッドを定義する。Bindingメソッドは、リクエスト/レスポンストランザクションまたはインジケーショントランザクションのいずれかで使用することができる。リクエスト/レスポンストランザクションで使用する場合、Bindingメソッドは、NATがSTUNクライアントに割り当てた特定のbindingを決定するために使用することができる。リクエスト/レスポンスまたはインジケーショントランザクションで使用される場合、Bindingメソッドは、これらのbindingを維持するために使用することも可能です。
 
-Bindingリクエスト/レスポンストランザクションでは、BindingリクエストはSTUNクライアントからSTUNサーバーに送信されます。BindingリクエストがSTUNサーバーに到着したとき、STUNクライアントとSTUNサーバーの間で1つ以上のNATを通過している場合がある（図1では、そのようなNATが2つある）。バインド要求メッセージがNATを通過すると、NATはパケットのソース・トランスポート・アドレス（つまり、ソースIPアドレスとソースポート）を変更します。その結果、サーバーが受信したリクエストのソース・トランスポート・アドレスは、サーバーに最も近いNATが作成したパブリックIPアドレスとポートになります。これを「反射型トランスポートアドレス」と呼びます。STUNサーバーは、そのソーストランスポートアドレスをSTUN BindingレスポンスのXOR-MAPPED-ADDRESS属性にコピーし、BindingレスポンスをSTUNクライアントに送り返す。このパケットがNATを通過して戻ってくると、NATはIPヘッダーの宛先トランスポートアドレスを変更するが、STUNレスポンスのボディ内のXOR-MAPPED-ADDRESS属性のトランスポートアドレスは変更されないままである。このようにして、クライアントは、STUNサーバーに対して最も外側のNATによって割り当てられた反射的なトランスポートアドレスを知ることができる。
+Bindingリクエスト/レスポンストランザクションでは、BindingリクエストはSTUNクライアントからSTUNサーバーに送信されます。BindingリクエストがSTUNサーバーに到着したとき、STUNクライアントとSTUNサーバーの間で1つ以上のNATを通過している場合がある（図1では、そのようなNATが2つある）。バインド要求メッセージがNATを通過すると、NATはパケットのソース・トランスポート・アドレス（つまり、ソースIPアドレスとソースポート）を変更します。
+その結果、サーバーが受信したリクエストのソース・トランスポート・アドレスは、サーバーに最も近いNATが作成したパブリックIPアドレスとポートになります。これを「反射型トランスポートアドレス」と呼びます。
+STUNサーバーは、そのソーストランスポートアドレスをSTUN BindingレスポンスのXOR-MAPPED-ADDRESS属性にコピーし、BindingレスポンスをSTUNクライアントに送り返す。このパケットがNATを通過して戻ってくると、NATはIPヘッダーの宛先トランスポートアドレスを変更するが、STUNレスポンスのボディ内のXOR-MAPPED-ADDRESS属性のトランスポートアドレスは変更されないままである。このようにして、クライアントは、STUNサーバーに対して最も外側のNATによって割り当てられた反射的なトランスポートアドレスを知ることができる。
 
 いくつかの用途では、STUNは他のプロトコルと多重化されなければならない（例えば、[RFC8445]と[RFC5626]）。これらの用途では、パケットを検査し、それがSTUNパケットであるかどうかを判断する方法が必要である。STUNは、STUNヘッダにおいて、以下のような固定値を持つ3つのフィールドを提供する。
 
@@ -467,7 +469,7 @@ SRVレコードが見つからない場合、クライアントは[RFC8305]で�
 ここで、OpaqueStringプロファイルは[RFC8265]で定義されています。エンコーディングはUTF-8 [RFC3629]を使用します。
 
 9.1.2.リクエストまたはインディケーションを形成する
-リクエストまたはインジケーションメッセージの場合、エージェントは、両エージェ ントがサポートするメッセージ完全性アルゴリズムを外部の仕組みから知ってい ない限り、メッセージにUSERNAME、MESSAGE-INTEGRITY-SHA256、およびMESSAGE-INTEGRITY属性を含めな ければならない[MUST]。この場合、USERNAMEに加えてMESSAGE-INTEGRITYまたはMESSAGE-INTEGRITY-SHA256のいずれかが含まれなければならない(MUST)。MESSAGE-INTEGRITY属性のHMACはセクション14.5で述べられているように計算され、MESSAGE-INTEGRITY-SHA256属性のHMACはセクション14.6で述べられているように計算される。パスワードがリクエストや表示に含まれることはないことに注意すること。
+リクエストまたはインジケーションメッセージの場合、エージェントは、両エージェ ントがサポートするメッセージ完全性アルゴリズムを外部の仕組みから知ってい ない限り、メッセージにUSERNAME、MESSAGE-INTEGRITY-SHA256、およびMESSAGE-INTEGRITY属性を含めなければならない[MUST]。この場合、USERNAMEに加えてMESSAGE-INTEGRITYまたはMESSAGE-INTEGRITY-SHA256のいずれかが含まれなければならない(MUST)。MESSAGE-INTEGRITY属性のHMACはセクション14.5で述べられているように計算され、MESSAGE-INTEGRITY-SHA256属性のHMACはセクション14.6で述べられているように計算される。パスワードがリクエストや表示に含まれることはないことに注意すること。
 
 9.1.3.リクエストまたはインジケーションを受信する
 エージェントは、メッセージの基本的な処理を行った後、指定された順序で以下に列挙するチェックを実行する。
@@ -1015,24 +1017,28 @@ IANAは、属性0x0002、0x0004、0x0005、0x0007、0x000Bの名前を更新し�
 
 さらに、[RFC5389]では、属性0x0003の名前に誤りがありました。[RFC5389]ではCHANGE-ADDRESSと呼ばれていましたが、実際にはCHANGE-REQUESTと呼ばれていました。したがって、IANAは0x0003の説明を「Reserved; was CHANGE-REQUEST prior to [RFC5389]」と更新しています。
 
-   理解が必要な範囲（0x0000-0x7FFF）：
-   0x0000：予約済み
-   0x0001：Mapped Address
-   0x0002：予約済み. [RFC5389]以前はRESPONSE-ADDRESSでした
-   0x0003：予約済み. [RFC5389]以前はCHANGE-REQUESTでした
-   0x0004：予約済み. [RFC5389]以前はSOURCE-ADDRESSでした
-   0x0005：予約済み. [RFC5389]以前はCHANGED-ADDRESSでした
-   0x0006：ユーザー名
-   0x0007：予約済み. [RFC5389]より前のパスワードでした
-   0x0008：メッセージの整合性
-   0x0009：エラーコード
-   0x000A：不明な属性
-   0x000B：予約済み. [RFC5389]より前のREFLECTED-FROMでした
-   0x0014：REALM
-   0x0015：NONCE
-   0x0020：XOR-MAPPED-ADDRESS
+   Comprehension-required range (0x0000-0x7FFF):
+   0x0000: Reserved
+   0x0001: MAPPED-ADDRESS
+   0x0002: Reserved; was RESPONSE-ADDRESS prior to [RFC5389]
+   0x0003: Reserved; was CHANGE-REQUEST prior to [RFC5389]
+   0x0004: Reserved; was SOURCE-ADDRESS prior to [RFC5389]
+   0x0005: Reserved; was CHANGED-ADDRESS prior to [RFC5389]
+   0x0006: USERNAME
+   0x0007: Reserved; was PASSWORD prior to [RFC5389]
+   0x0008: MESSAGE-INTEGRITY
+   0x0009: ERROR-CODE
+   0x000A: UNKNOWN-ATTRIBUTES
+   0x000B: Reserved; was REFLECTED-FROM prior to [RFC5389]
+   0x0014: REALM
+   0x0015: NONCE
+   0x0020: XOR-MAPPED-ADDRESS
 
-理解-オプションの範囲（0x8000-0xFFFF）0x8022：ソフトウェア0x8023：ALTERNATE-SERVER 0x8028：FINGERPRINT
+   Comprehension-optional range (0x8000-0xFFFF)
+   0x8022: SOFTWARE
+   0x8023: ALTERNATE-SERVER
+   0x8028: FINGERPRINT
+
 
 18.3.2.新しい属性
 IANAは、"STUN Attributes "レジストリに以下の属性を追加しました。
