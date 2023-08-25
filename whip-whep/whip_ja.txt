@@ -1,0 +1,595 @@
+ワークグループ願いインターネットドラフト：ドラフト-IETFウィッシュ・ウィップ-08出版された：2023年3月30日意図されたステータススタンダード・トラック期限切れ：2023年10月1日著者たち
+S.ムリーリョ
+ミリキャスト
+ 
+A.グアイヤール
+CoSMoソフトウェア
+WebRTC-HTTPインジェスト・プロトコル（WHIP）
+要旨
+この文書では、ストリーミングサービスやCDNへのWebRTCベースのコンテンツ取り込みを可能にする、シンプルなHTTPベースのプロトコルについて説明する
+
+本メモの位置づけ
+本インターネットドラフトは、BCP78およびBCP79の規定に完全に準拠して提出される
+
+Internet-Draftは、インターネット技術タスクフォース（IETF）の作業文書である。他のグループも作業文書をInternet-Draftとして配布することがあることに注意。現在のInternet-Draftのリストはhttps://datatracker.ietf.org/drafts/current/.ある。
+
+インターネットドラフトは、最長6ヶ月間有効なドラフト文書であり、いつでも他の文書に更新、置き換え、または廃止される可能性があります。インターネット・ドラフトを参考資料として使用したり、「作業中以外の理由で引用したりすることは不適切である。
+
+このインターネットドラフトの有効期限は2023年10月1日である
+
+著作権について
+Copyright (c) 2023 IETF Trust and the persons identified as the document authors.無断複写・転載を禁じます
+
+本文書は、本文書の発行日において有効なBCP 78およびIETFトラストのIETF文書に 関する法的規定(https://trustee.ietf.org/license-info)に従うものとする。これらの文書には、この文書に関するあなたの権利と制限が記述されていますので、注意深く確認してください。この文書から抽出されたコードコンポーネントは、トラスト法的条項の第4.e項 に記述されているように、改訂BSDライセンスの文章を含めなければならず、また、 改訂BSDライセンスに記述されているように、無保証で提供されます
+
+▲
+目次
+1.はじめに
+
+2.用語
+
+3.概要
+
+4.プロトコル操作
+
+4.1.ICEとNATのサポート
+
+4.2.WebRTCの制約
+
+4.3.ロードバランシングとリダイレクト
+
+4.4.STUN/TURNサーバーの設定
+
+4.5.認証と承認
+
+4.6.サイマルキャストとスケーラブルビデオコーディング
+
+4.7.プロトコルの拡張
+
+5.セキュリティに関する考慮事項
+
+6.IANAに関する考察
+
+6.1.リンク関係タイプ：アイスサーバー
+
+6.2.WHIP URNサブネームスペースとWHIPレジストリの登録
+
+6.3.WHIPのURNサブネームスペース
+
+6.3.1.仕様テンプレート
+
+6.4.WHIPプロトコル拡張URIの登録
+
+6.4.1.登録手続き
+
+6.4.2.WHIPプロトコル拡張登録テンプレート
+
+7.謝辞
+
+8.参考文献
+
+8.1.規範となる参考文献
+
+8.2 参考文献
+
+著者住所
+
+1. はじめに
+IETFのRTCWEBワーキンググループは、マルチメディアセッションのセットアップ、管理、および破棄を制御するために使用されるメカニズムであるJSEP ([RFC8829])を標準化した。また、セッション記述プロトコル(SDP)[RFC3264]を使用したオファー/アンサーモデルを使用してメディアフローをネゴシエートする方法や、有線で送信されるデータのフォーマット(メディアタイプ、コーデックパラメータ、暗号化など)も記述されている。WebRTCは意図的に、アプリケーションレベルでのシグナリングトランスポートプロトコルを指定しない
+
+残念なことに、WebRTCには標準化されたシグナリングメカニズムがないため、放送／ストリーミング業界では、合理化された制作パイプラインが当然とされており、インジェストプロトコルを使用して、エンコードされたメディアをストリーミングサービスやコンテンツデリバリーネットワーク（CDN）にインジェストすることはできません
+
+WebRTCは、SIP[RFC3261]やXMPP[RFC6120]などの標準的なシグナリングプ ロトコルと統合できるが、これらは放送/ストリーミングサービスで使用す るようには設計されておらず、その業界で採用される兆しもない。RTPベースのRTSP[RFC7826]は、SDPのオファー/アンサーモデル[RFC3264]と互換性がない
+
+この文書では、メディア取り込み方法としてWebRTCをサポートするためのシンプルなプロトコルを提案する
+
+実行するのは簡単だ
+一般的なIPベースのブロードキャスト・同様に使いやすい。
+WebRTCとRTCWEBの仕様に完全に準拠しています
+従来のメディア・プラットフォームとWebRTCのエンド・ツー・エンド・プラットフォームの両方で、可能な限り低いレイテンシーでインジェストを可能にする
+WebRTCをサポートするために、ハードウェアエンコーダとブロードキャストサービスの両方に対する要件を低減します
+ウェブブラウザとネイティブエンコーダの両方で使用可能
+2. 専門用語
+本文書のキーワード「MUST」、「MUST NOT」、「REQUIRED」、「SHALL」、「SHALL NOT」、「SHOULD」、「SHOULD NOT」、「RECOMMENDED」、「NOT RECOMMENDED」、「MAY」、および「OPTIONAL」は、ここに示すように、すべて大文字で表示される場合、およびその場合に限り、BCP14[RFC2119] [RFC8174]の記述に従って解釈されるものとする
+
+WHIPクライアント：WHIPプロトコルのクライアントとして動作し、メディアをエンコードしてリモートのメディアサーバーに配信する
+WebRTCメディアエンコーダまたはプロデューサー
+
+WHIPエンドポイント：最初のWHIPリクエストを受信するインジェストサーバー
+
+WHIPエンドポイントURL：WHIPリソースを作成するWHIPエンドポイントのURL
+
+メディア・サーバー：WHIPクライアントとのメディアセッションを確立し、それによって生成されたメディアを受信するWebRTCメディアサーバーまたはコンシューマー
+
+WHIPリソース：WHIPリソース：進行中のインジェストセッションに対してWHIPエンドポイントが割り当てたリソースで、WHIPクライアントがセッションの変更（ICE操作や終了など）のリクエストを送信できるもの
+
+WHIPリソースURL：WHIPエンドポイントによって特定のメディアセッションに割り当てられたURLで、セッションの終了やICEの再起動などの操作を実行するために使用できる
+
+3. 概要
+WebRTC-HTTP Ingest Protocol（WHIP）は、HTTP POSTリクエストを使用してシングルショットのSDPオファー/アンサーを実行するため、エンコーダー/メディア制作者（WHIPクライアント）と放送インジェストエンドポイント（メディアサーバー）の間でICE/DTLSセッションを確立できます
+
+ICE/DTLSセッションがセットアップされると、メディアはエンコーダ/メ ディアプロデューサ（WHIPクライアント）から放送受信エンドポイント（メ ディアサーバ）に一方向に流れる。複雑さを軽減するために、SDPの再ネゴシエーションはサポートされ ていないため、HTTP経由の最初のSDPオファー/アンサーが完了すると、 「m=」セクションを追加することはできない
+
+
+ +-------------+    +---------------+ +--------------+ +---------------+
+ | WHIP client |    | WHIP endpoint | | Media Server | | WHIP resource |
+ +--+----------+    +---------+-----+ +------+-------+ +--------|------+
+    |                         |              |                  |
+    |                         |              |                  |
+    |HTTP POST (SDP Offer)    |              |                  |
+    +------------------------>+              |                  |
+    |201 Created (SDP answer) |              |                  |
+    +<------------------------+              |                  |
+    |          ICE REQUEST                   |                  |
+    +--------------------------------------->+                  |
+    |          ICE RESPONSE                  |                  |
+    |<---------------------------------------+                  |
+    |          DTLS SETUP                    |                  |
+    |<======================================>|                  |
+    |          RTP/RTCP FLOW                 |                  |
+    +<-------------------------------------->+                  |
+    | HTTP DELETE                                               |
+    +---------------------------------------------------------->+
+    | 200 OK                                                    |
+    <-----------------------------------------------------------x
+
+図1：WHIPセッションのセットアップとティアダウン
+
+4. プロトコル操作
+取り込みセッションをセットアップするために、WHIPクライアントはJSEPルールに従ってSDPオファーを生成し、設定されたWHIPエンドポイントURLにHTTP POSTリクエストを実行します
+
+HTTP POSTリクエストのコンテンツタイプは「application/sdp」であり、ボディ としてSDPオファーが含まれる。WHIPエンドポイントはSDPアンサーを生成し、コンテンツタイプが 「application/sdp」の「201 Created」応答と、ボディとしてのSDPアンサー、 および新しく作成されたリソースを示すLocationヘッダーフィールドを返す
+
+SDPオファーは「sendonly」属性を使用するべきであり[SHOULD]、SDPアンサーは 「recvonly」属性を使用しなければならない[MUST]
+
+POST /whip/endpoint HTTP/1.1
+Host: whip.example.com
+Content-Type: application/sdp
+Content-Length: 1326
+
+v=0
+o=- 5228595038118931041 2 IN IP4 127.0.0.1
+s=-
+t=0 0
+a=group:BUNDLE 0 1
+a=extmap-allow-mixed
+a=msid-semantic: WMS
+m=audio 9 UDP/TLS/RTP/SAVPF 111
+c=IN IP4 0.0.0.0
+a=rtcp:9 IN IP4 0.0.0.0
+a=ice-ufrag:EsAw
+a=ice-pwd:bP+XJMM09aR8AiX1jdukzR6Y
+a=ice-options:trickle
+a=fingerprint:sha-256 DA:7B:57:DC:28:CE:04:4F:31:79:85:C4:31:67:EB:27:58:29:ED:77:2A:0D:24:AE:ED:AD:30:BC:BD:F1:9C:02
+a=setup:actpass
+a=mid:0
+a=bundle-only
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
+a=sendonly
+a=msid:- d46fb922-d52a-4e9c-aa87-444eadc1521b
+a=rtcp-mux
+a=rtpmap:111 opus/48000/2
+a=fmtp:111 minptime=10;useinbandfec=1
+m=video 9 UDP/TLS/RTP/SAVPF 96 97
+c=IN IP4 0.0.0.0
+a=rtcp:9 IN IP4 0.0.0.0
+a=ice-ufrag:EsAw
+a=ice-pwd:bP+XJMM09aR8AiX1jdukzR6Y
+a=ice-options:trickle
+a=fingerprint:sha-256 DA:7B:57:DC:28:CE:04:4F:31:79:85:C4:31:67:EB:27:58:29:ED:77:2A:0D:24:AE:ED:AD:30:BC:BD:F1:9C:02
+a=setup:actpass
+a=mid:1
+a=bundle-only
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
+a=extmap:10 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
+a=extmap:11 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
+a=sendonly
+a=msid:- d46fb922-d52a-4e9c-aa87-444eadc1521b
+a=rtcp-mux
+a=rtcp-rsize
+a=rtpmap:96 VP8/90000
+a=rtcp-fb:96 ccm fir
+a=rtcp-fb:96 nack
+a=rtcp-fb:96 nack pli
+a=rtpmap:97 rtx/90000
+a=fmtp:97 apt=96
+
+HTTP/1.1 201 Created
+ETag: "xyzzy"
+Content-Type: application/sdp
+Content-Length: 1400
+Location: https://whip.example.com/resource/id
+
+v=0
+o=- 1657793490019 1 IN IP4 127.0.0.1
+s=-
+t=0 0
+a=group:BUNDLE 0 1
+a=extmap-allow-mixed
+a=ice-lite
+a=msid-semantic: WMS *
+m=audio 9 UDP/TLS/RTP/SAVPF 111
+c=IN IP4 0.0.0.0
+a=rtcp:9 IN IP4 0.0.0.0
+a=ice-ufrag:38sdf4fdsf54
+a=ice-pwd:2e13dde17c1cb009202f627fab90cbec358d766d049c9697
+a=fingerprint:sha-256 F7:EB:F3:3E:AC:D2:EA:A7:C1:EC:79:D9:B3:8A:35:DA:70:86:4F:46:D9:2D:CC:D0:BC:81:9F:67:EF:34:2E:BD
+a=candidate:1 1 UDP 2130706431 198.51.100.1 39132 typ host
+a=setup:passive
+a=mid:0
+a=bundle-only
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
+a=recvonly
+a=rtcp-mux
+a=rtcp-rsize
+a=rtpmap:111 opus/48000/2
+a=fmtp:111 minptime=10;useinbandfec=1
+m=video 9 UDP/TLS/RTP/SAVPF 96 97
+c=IN IP4 0.0.0.0
+a=rtcp:9 IN IP4 0.0.0.0
+a=ice-ufrag:38sdf4fdsf54
+a=ice-pwd:2e13dde17c1cb009202f627fab90cbec358d766d049c9697
+a=fingerprint:sha-256 F7:EB:F3:3E:AC:D2:EA:A7:C1:EC:79:D9:B3:8A:35:DA:70:86:4F:46:D9:2D:CC:D0:BC:81:9F:67:EF:34:2E:BD
+a=candidate:1 1 UDP 2130706431 198.51.100.1 39132 typ host
+a=setup:passive
+a=mid:1
+a=bundle-only
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
+a=extmap:10 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
+a=extmap:11 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
+a=recvonly
+a=rtcp-mux
+a=rtcp-rsize
+a=rtpmap:96 VP8/90000
+a=rtcp-fb:96 ccm fir
+a=rtcp-fb:96 nack
+a=rtcp-fb:96 nack pli
+a=rtpmap:97 rtx/90000
+a=fmtp:97 apt=96
+
+図2:SDP O/Aを実行するHTTP POSTの例
+
+セッションがセットアップされると、ICE consent freshness[RFC7675]を使用して、どちらかの側によるセッション終了のための、非グレースフル切断とDTLSティアダウンを検知しなければ ならない[SHALL]
+
+セッションを明示的に終了するには、WHIP クライアントは最初の HTTP POST の Location ヘッダーフィールドで返されたリソース URL に対して HTTP DELETE リクエストを実行しなければなりません（MUST）。HTTP DELETEリクエストを受信すると、WHIPリソースは削除され、メディアサーバー上のリソースが解放され、ICEとDTLSセッションが終了します
+
+セッションを終了するメディアサーバーは、同意の即時失効のために[RFC7675]セクション5.2の手順に従わなければならない[MUST]
+
+WHIPエンドポイントは、このプロトコル仕様の将来のバージョンのためにその使用を確保するために、エンドポイントURL上のすべてのHTTP GET、HEADまたはPUTリクエストに対して "405 Method Not Allowed "応答を返さなければならない（MUST）
+
+WHIPエンドポイントは、[FETCH]で定義されているように、Cross-Origin Resource Sharing (CORS)のためのOPTIONSリクエストをサポートしなければならず[MUST]、[W3C.REC-ldp-20150226]に従って受信したOPTIONSリクエストに対する "200 OK "応答に、mime type値が "application/sdp "の "Accept-Post "ヘッダーを含めるべきである[SHOULD]
+
+WHIPリソースは、このプロトコル仕様の将来のバージョンでの使用を確保するために、リソースURLのHTTP GET、HEAD、POST、またはPUTリクエストに対して "405 Method Not Allowed "応答を返さなければならない（MUST）
+
+4.1. ICEとNATのサポート
+WHIPクライアントによる最初のオファーは、ICE候補の完全なリストを含む完全なICE収集が完了した後に送信されてもよい[MAY]し、または[RFC8863]に従ってローカル候補のみを含んでもよい[MAY](または候補の空のリストを含んでもよい)
+
+プロトコルを簡略化するために、SDPアンサーが送信されると、メディア サーバーのICE候補から収集したトリクル候補を交換するサポートはない。WHIPエンドポイントは、クライアントリクエストに応答する前に、メディア サーバーのすべてのICE候補を収集しなければならず[SHALL]、SDPアンサーにはメ ディアサーバーのICE候補の完全なリストを含めなければならない[SHALL]。メディアサーバーはICE liteを使用してもよい[MAY]が、WHIPクライアントは完全なICEを実装しなければならない[MUST]
+
+WHIPクライアントは、[RFC8838]に従って、[RFC8840]で規定されているMIMEタイプ "application/trickle-ice-sdpfrag "のSDPフラグメントを本文に含むHTTP PATCHリクエストをWHIPリソースURLに送信することで、トリクルICEまたはICE再起動を実行してもよい[MAY]。トリクルICEに使用する場合、このPATCHメッセージのボディには新しいICE 候補が含まれる。
+
+WHIPリソースにはトリクルICEとICEリスタートのサポートが推奨されます
+
+WHIPリソースがTrickle ICEまたはICE restartのどちらかをサポートしているが、両方をサポートしていない場合、サポートしていないHTTP PATCHリクエストに対して "405 Not Implemented "レスポンスを返さなければならない（MUST）
+
+WHIPリソースが何らかの目的でPATCHメソッドをサポートしていない場合、[RFC9110]セクション6.6.2説明されているように、"501 Not Implemented "応答を返さなければならない(MUST)。
+
+WHIPクライアントによって送信されたHTTP PATCHリクエストはWHIPリソースによって順番通りに受信されない可能性があるため、WHIPリソースは[RFC9110]セクション2.3に従ってICEセッションを識別する一意の強力なentity-tagを生成しなければなりません(MUST)。最初のICEセッションを識別するentity-tagの初期値は、WHIPエンドポイントへの最初のPOSTリクエストに対する "201 Created "応答のETagヘッダーフィールドで返されなければならない(MUST)。また、ICE の再起動をトリガーする PATCH リクエストの "200 OK" でも返されなければならない（MUST）。元の "201 Created "レスポンスにETagを含めることは、WHIPリソースがICEの再起動をサポートしている場合にのみ必須で、そうでない場合はオプションであることに注意してください
+
+トリクルICEを実行するためにPATCHリクエストを送信するWHIPクライアントは、[RFC9110]セクション3.1に従って、最新の既知のentity-tagを持つ "If-Match "ヘッダーフィールドを含めなければならない(MUST)。PATCHリクエストがWHIPリソースによって受信されると、WHIPリソースは[RFC9110]セクション3.1に従って、示されたentity-tag値とリソースの現在のentity-tagを比較し、それらが一致しない場合は "412 Precondition Failed "応答を返さなければならない
+
+WHIPクライアントは、例えばセッションを終了するためにDELETEリク エストを開始するときなど、特定のICEセッションにマッチすることが必 要でないときは、エンティティタグ検証を使用すべきではない[SHOULD NOT。
+
+新しい ICE 候補を含む PATCH リクエストを受け取るが、ICE の再起動を実行しない WHIP リソースは、ボディなしの "204 No Content" 応答を返さなければならない(MUST)。メディアサーバーが候補トランスポートをサポートしないか、接続アドレスを解決できない場合、"204 No Content "応答でHTTPリクエストを受け入れ、候補を静かに破棄しなければならない(MUST)
+
+PATCH /resource/id HTTP/1.1
+Host: whip.example.com
+If-Match: "xyzzy"
+Content-Type: application/trickle-ice-sdpfrag
+Content-Length: 548
+
+a=ice-ufrag:EsAw
+a=ice-pwd:P2uYro0UCOQ4zxjKXaWCBui1
+m=audio 9 RTP/AVP 0
+a=mid:0
+a=candidate:1387637174 1 udp 2122260223 192.0.2.1 61764 typ host generation 0 ufrag EsAw network-id 1
+a=candidate:3471623853 1 udp 2122194687 198.51.100.1 61765 typ host generation 0 ufrag EsAw network-id 2
+a=candidate:473322822 1 tcp 1518280447 192.0.2.1 9 typ host tcptype active generation 0 ufrag EsAw network-id 1
+a=candidate:2154773085 1 tcp 1518214911 198.51.100.2 9 typ host tcptype active generation 0 ufrag EsAw network-id 2
+a=end-of-candidates
+
+HTTP/1.1 204 No Content
+
+
+図3：トリクルICEのリクエスト
+
+ICEリスタートを実行するためにPATCHリクエストを送るWHIPクライアントは、[RFC9110]セクション3.1ように、フィールド値 "*"を持つ "If-Match "ヘッダーフィールドを含まなければならない[MUST]。
+
+HTTP PATCHリクエストがICEの再起動につながる場合、WHIPリソースは "200 OK "を "application/trickle-ice-sdpfrag "ボディで返さなければならない（SHALL）。"application/trickle-ice-sdpfrag "ボディには新しいICEのユーザー名とパスワードが含まれ、オプションとしてWHIPクライアントのための新しいICE候補のセットが含まれる。また、ICEの再起動に成功した場合の "200 OK "応答は、ETag応答ヘッダーフィールドに新しいICEセッションに対応する新しいエンティティタグを含まなければならない（MUST ）
+
+ICE リクエストが WHIP リソースによって満たされない場合、リソースは適切な HTTP エラーコードを返さなければならず (MUST)、すぐにセッションを終了してはなりません (MUST NOT)。WHIPクライアントは新しいICEリスタートを再試行してもよいし、代わりにHTTP DELETEリクエストを発行してセッションを終了してもよい(MAY)。どちらの場合でも、[RFC7675]セクション5.1あるように、ICEの再起動の失敗の結果としてICEの同意が期限切れになった場合、セッションは終了しなければならない(MUST)。
+
+PATCH /resource/id HTTP/1.1
+Host: whip.example.com
+If-Match: "*"
+Content-Type: application/trickle-ice-sdpfrag
+Content-Length: 54
+
+a=ice-ufrag:ysXw
+a=ice-pwd:vw5LmwG4y/e6dPP/zAP9Gp5k
+
+HTTP/1.1 200 OK
+ETag: "abccd"
+Content-Type: application/trickle-ice-sdpfrag
+Content-Length: 102
+
+a=ice-lite
+a=ice-ufrag:289b31b754eaa438
+a=ice-pwd:0b66f472495ef0ccac7bda653ab6be49ea13114472a5d10a
+
+図4：ICEの再起動要求
+
+WHIP クライアントは新しい ICE 候補を送信するために ICE セッションに関連付けられたエンティティタグを知る必要があるため、新しいエンティティタグ値を持つ最初の POST リクエストまたは PATCH リクエストに対する HTTP 応答を受信する前に、収集された候補をバッファリングしなければなりません（MUST）。エンティティタグの値がわかったら、WHIP クライアントはこれまでにバッファリングしたすべての ICE 候補を含む単一の HTTP PATCH リクエストを送信するべきです（SHOULD）
+
+不安定なネットワーク状態の場合、ICEの再スタートHTTP PATCHリクエストとレスポンスを順番通りに受信できない可能性がある。このシナリオを軽減するために、クライアントが ICE 再起動を実行するとき、以前の ice ユーザー名とパスワードのフラグメントを破棄し、保留中の HTTP PATCH リクエストから受け取った HTTP PATCH レスポンスを無視しなければなりません (MUST)。WHIPクライアントは、最後に送信されたリクエストに対する応答で受け取ったICE情報のみを適用しなければならない(MUST)。クライアントとサーバーで ICE 情報の不一致がある場合（順番が違うリクエストのため）、STUN リクエストは無効な ICE 情報を含み、サーバーによって拒否されます。この状況がWHIPクライアントによって検出された場合、WHIPクライアントは新しいICEリスタートリクエストをサーバーに送るべきです（SHOULD）
+
+4.2. WebRTCの制約
+ストリーミングサービスへのメディア取り込みの特定のケースでは、WebRTC-gateway文書[I-D.draft-ietf-rtcweb-gateways]で詳述されているように、WebRTCコンプライアンス負担を簡素化するサーバー側についていくつかの仮定を行うことができます
+
+クライアントとメディアサーバーの両方でWHIPを実装する複雑さを軽減するために、WHIPはWebRTCの使用に関して以下の制限を課して
+
+WHIPクライアントとWHIPエンドポイントはどちらもSDPバンドル[RFC9143]を使用しなければならない[SHALL]。各 "m="セクションは1つのBUNDLEグループの一部でなければならない[MUST]。したがって、WHIPクライアントがSDPオファーを送信するとき、バンドル された各「m=」セクションに「bundle-only」属性を含めなければならない [MUST]。WHIPクライアントとメディアサーバーは、[RFC9143]セクション9に従って、BUNDLEグループに関連付けられた多重化メディアをサポートしなければならない[MUST]。さらに、[RFC9143]に従い、WHIPクライアントとMedia Serverはすべてのバンドルされたメディアに対してRTP/RTCP多重化を使用する。WHIPクライアントとメディアサーバーは、[RFC8858]に従って、バンドルされた各 "m="セクションに "rtcp-mux-only "属性を含めるべきである（SHOULD）
+
+したがって、すべての "m="セクションは、同じ値の "msid "属性を含まなければならない（MUST）。しかし、この仕様の将来の改訂では、各メディアの種類の単一のMediaStreamまたはMediaStreamTrackよりも多くのMediaStreamまたはMediaStreamTrackを許可することが可能であるため、前方互換性を確保するために、オーディオとビデオのトラック数またはストリーム数がWHIPエンドポイントによってサポートされていない場合、WHIPエンドポイントは "406 Not Acceptable "エラー応答でHTTP POSTリクエストを拒否しなければならない（MUST）
+
+さらに、WHIPエンドポイントは、"m="セクションの処理にエラーがある場合、[RFC8829]セクション5.3.1に従って個々の "m="セクションを拒否すべきではありません
+
+WHIPクライアントがSDPオファーを送信するときは、[RFC8842]で定義されて いるように、「actpass」属性値を持つSDP「setup」属性を挿入すべきである [SHOULD]。ただし、WHIPクライアントがDTLSクライアントの役割のみを実装する場合、 "active "属性値を持つSDP "setup "属性を使用してもよい[MAY]。WHIPエンドポイントが、「active」属性値のSDP「setup」属性を持つSDPオ ファーに対応していない場合、「422 Unprocessable Entity」応答でリクエストを拒否す るべきである[SHOULD。
+
+注意:[RFC8842]は、オファー側は「actpass」属性値を持つSDP「setup」 属性を挿入する必要があると定義している。ただし、WHIPクライアントは常に、DTLSサーバーの役割をサポートするこ とが期待されるメディアサーバーと通信する
+
+4.1セクションで説明されているように、WHIPクライアントとメディアサーバーの両方でトリクルICEとICE再起動サポートはオプションです。
+
+4.3. ロードバランシングとリダイレクト
+WHIPエンドポイントとメディアサーバーは同じサーバー上に配置されないかもしれないので、異なるメディアサーバーへの着信リクエストをロードバランスすることが可能である。WHIPクライアントは[RFC9110]セクション6.4.7に記述されているように、"307 Temporary Redirect "レスポンスを介してHTTPリダイレクトをサポートしなければならない（SHALL）。WHIPリソースURLは最終的なものでなければならず（MUST）、リダイレクトはそれに送られるPATCHとDELETEリクエストのためにサポートされる必要はありません
+
+高負荷の場合、WHIPエンドポイントは "503 Service Unavailable "応答を返してもよい[MAY]。これは、サーバーが一時的な過負荷または予定されたメンテナンスのために現在リクエストを処理できないことを示す。WHIPエンドポイントは、ユーザーエージェントがフォローアップリクエストをする前に待つべき最小時間を示すRetry-Afterヘッダーフィールドを送ってもよい
+
+4.4. STUN/TURNサーバーの設定
+WHIPエンドポイントは、WHIPエンドポイントURLへのHTTP POSTリクエストに対する "201 Created "レスポンスで、クライアントが使用可能なSTUN/TURNサーバー設定URLと認証情報を返してもよい（MAY）
+
+各STUN/TURNサーバーは、"ice-server "という "rel "属性値を持つ "Link "ヘッダーフィールド[RFC8288]を使用して返される。LinkターゲットURIは[RFC7064]と[RFC7065]で定義されているサーバーURLである。認証情報はLink target属性で以下のようにエンコードされる
+
+username: LinkヘッダーフィールドがTURNサーバーを表し、credential-typeが "password "の場合、この属性はそのTURNサーバーで使用するユーザー名を指定する
+クレデンシャル：credential-type "属性がないか、"password "値を持つ場合、[RFC8489]のセクション10.2説明されているように、credential属性は長期的な認証パスワードを表す。
+credential-type：credential-type：LinkヘッダーフィールドがTURNサーバーを表す場合、こ の属性は、そのTURNサーバーが認可を要求するときにcredential属性値がど のように使われるべきかを指定する。この属性が存在しない場合のデフォルト値は「password」である
+
+     Link: <stun:stun.example.net>; rel="ice-server"
+     Link: <turn:turn.example.net?transport=udp>; rel="ice-server";
+           username="user"; credential="myPassword"; credential-type="password"
+     Link: <turn:turn.example.net?transport=tcp>; rel="ice-server";
+           username="user"; credential="myPassword"; credential-type="password"
+     Link: <turns:turn.example.net?transport=tcp>; rel="ice-server";
+           username="user"; credential="myPassword"; credential-type="password"
+
+図5：ICEサーバーの構成例
+
+注："ice-server "の "rel "属性値とターゲット属性の命名は、4.2.1節のW3C WebRTC勧告[W3C.REC-webrtc-20210126]のRTCConfiguration辞書で使用されているものに従う。"ice-server "の "rel "属性値には "urn:ietf:params:whip: "が付加されていないため、STUN/TURNサーバーの使用を設定するためにこのメカニズムを使用する可能性がある他の仕様で再利用できる
+
+注：ICEエージェントの実装によっては、次のICE収集フェーズで更新されたSTUN/TURNサーバー構成を適用するためにICEの再起動を実行する必要がないように、WHIPクライアントは、ローカルSDPオファーでsetLocalDescriptionメソッドを呼び出す前に、setConfigurationメソッドを呼び出す必要があるかもしれない
+
+RFC8829]の4.1.18節で規定されているように、ローカルオファーが作成された後にSTUN/TURNサーバーの設定を更新することをサポートしないWebRTC実装もある。これらのクライアントをサポートするために、WHIPエンドポイントはPOSTリクエストが送信される前に、WHIPエンドポイントURLに送信されるOPTIONSリクエストへの応答にSTUN/TURNサーバーコンフィギュレーションを含めてもよい（MAY）。しかし、この方法は推奨されない（NOT RECOMMENDED）ので、基礎となるWHIPクライアントのwebrtc実装でサポートされている場合、WHIPクライアントは代わりにHTTP POSTリクエストのレスポンスでWHIPエンドポイントから情報が返されるのを待つべきである（SHOULD）
+
+TURNサーバー認証情報の生成は、外部プロバイダーへのリクエストの実行を必要とするかもしれず、これはOPTIONSリクエスト処理に待ち時間を追加し、そのリクエストを処理するために必要な処理を増やす可能性がある。これを防ぐために、WHIPエンドポイントは、OPTIONSリクエストがCORSのプリフライトリクエストである場合、つまり、OPTIONSリクエストが "POST "値を持つAccess-Control-Request-Methodを含まず、Access-Control-Request-Headers HTTPヘッダーが "Link "値を含まない場合、STUN/TURNサーバーの設定を返してはならない(SHOULD NOT)
+
+また、WHIPエンドポイントによって提供される値を上書きして、WHIPクライアント上の放送サービスまたは外部のTURNプロバイダのいずれかによって提供される長期的な資格情報でSTUN/TURNサーバーのURLを設定することも可能かも
+
+4.5. 認証と認可
+WHIPエンドポイントとリソースは、[RFC6750]セクション2.1に規定されているように、Bearerトークンを持つHTTP Authorizationヘッダーフィールドを使用してHTTPリクエストが認証されることを要求してもよい(MAY)。WHIP クライアントはこの認証と承認の仕組みを実装し、CORS のためのプリフライト OPTIONS リクエストを除く、WHIP エンドポイントまたはリソースに送信されるすべての HTTP リクエストで HTTP Authorization ヘッダーフィールドを送信しなければなりません (MUST)
+
+ベアラートークンの性質、構文、およびセマンティクス、ならびにそれを クライアントに配布する方法は、本文書の範囲外である。使用され得るトークンの種類の例としては、[RFC6750]および[RFC8725]に従っ たJWTトークン、あるいはデータベースに格納された共有秘密があるが、これらに 限定されない。トークンは通常、WHIPエンドポイントURLと一緒にエンドユーザーに提供され、WHIPクライアントに設定されます（RTMP URLとストリームキーが配布される方法に似ています）
+
+WHIPエンドポイントとリソースは、代わりにWHIPエンドポイントまたはリソースのURL内に認証トークンをエンコードすることによって、認証と認可を実行することができます。WHIPクライアントがベアラートークンを使用するように設定されていない場合、HTTP Authorizationヘッダフィールドはどのようなリクエストでも送信されてはなりません
+
+4.6. サイマルキャストとスケーラブルビデオコーディング
+RFC8853]に従ったサイマルキャストは、SDPオファー/アンサーでのネゴシエーションによって、メディアサーバーとWHIPクライアントの両方でサポートされてもよい
+
+クライアントがサイマルキャストに対応しており、公開時に有効にしたい場合、[RFC8853]セクション5.3の手順に従って、SDPオファーで対応をネゴシエートしなければならない[MUST]。サイマルキャストのオファーを受け入れるサーバーは、[RFC8853]セクション 5.3.2の手順に従ってアンサーを作成しなければならない[MUST]。
+
+メディアサーバーとWHIPクライアントの両方がSVC（Scalable Video Coding）をサポートすることは可能である。ただし、SDPにはSVCのための普遍的なネゴシエーションメカニズムがないため、エンコーダは、SVCを設定するときに、ネゴシエートされたコーデック、使用目的、使用可能なデコーダのSVCサポートを考慮する必要がある
+
+4.7. プロトコルの拡張
+WHIPプロトコルで定義される将来の拡張をサポートするために、新しい拡張を登録し、発表するための共通の手順が定義されています
+
+WHIPサーバーがサポートするプロトコル拡張は、WHIPエンドポイントに送信された最初のHTTP POSTリクエストに対する "201 Created "レスポンスでWHIPクライアントにアドバタイズされなければなりません（MUST）。WHIPエンドポイントは、拡張の "rel "タイプ属性と、その拡張に関連するリクエストを受信するために利用できるHTTPリソースのURIを持つ、各拡張のための1つの "Link "ヘッダーフィールドを返さなければなりません（MUST）
+
+プロトコル拡張はWHIPクライアントとサーバーの両方にとってオプションである。WHIPクライアントは未知の "rel "属性値を持つLink属性を無視しなければならず（MUST）、WHIPサーバーは拡張機能の使用を要求してはならない（MUST NOT）
+
+各プロトコル拡張は、プレフィックスで始まる一意の "rel "属性値をIANAに登録しなければならない(MUST)：「urn:ietf:params:whip:ext "はセクション6.3定義されている。
+
+例えば、https://html.spec.whatwg.org/multipage/server-sent-events.html#server-sent-events で規定されているような、サーバーが送 信するイベントを使用したサーバー間通信の潜在的な拡張を考慮すると、 公開されたストリームのサーバー側のイベントリソースに接続するための URL は、「Link」ヘッダーフィールドと「rel」属性が「urn:ietf:params:whip:ext:example:server-sent-events」 である、最初の HTTP の「201 Created」応答で返されるかもしれない(このドキュ メントでは、そのような拡張は規定せず、例としてのみ使用する)。(本文書ではそのような拡張子は指定せず、例としてのみ使用する)
+
+この理論的なケースでは、HTTP POSTリクエストに対する "201 Created "レスポンスは次のようになる
+
+HTTP/1.1 201 Created
+Content-Type: application/sdp
+Location: https://whip.example.com/resource/id
+Link: <https://whip.ietf.org/publications/213786HF/sse>;
+      rel="urn:ietf:params:whip:ext:example:server-side-events"
+
+5. セキュリティ
+WebRTCのセキュリティモデルを維持するために、HTTPSを使用しなければならない（SHALL）
+
+6. IANAに関する考察
+この仕様は、WHIPプロトコル拡張のための新しいリンク関係タイプとURNサブネームスペースのレジストリを追加します
+
+6.1. リンク関係タイプ：アイスサーバー
+以下のリンク関係タイプは、[RFC8288]のセクション4.2に従ってIANAによって登録されている
+
+リレーション名：アイス
+
+説明WHIPプロトコルの場合、ICEエージェントが相手との接続を確立するために使用できるSTUNサーバーとTURNサーバーを伝える
+
+参照
+
+6.2. WHIP URNサブネームスペースとWHIPレジストリの登録
+IANAは、[RFC3553]に従い、「IETF URN Sub-namespace for Registered Protocol Parameter Identifiers」レジストリにエントリを追加し、登録済みパラメータ識別子用のサブネームスペースを作成した：「urn:ietf:params:whip "である
+
+このサブ名前空間を管理するために、IANAは "urn:ietf:params:whip "名前空間内のエントリを管理するために使用される "WebRTC-HTTP ingestion protocol (WHIP) URIs "レジストリを作成した。レジストリの説明は以下の通り
+
+レジストリ名：
+仕様：この文書（RFC TBD
+リポジトリ：セクション6.3参照
+インデックス値：セクション6.3参照
+6.3. WHIPのURNサブネームスペース
+WHIPエンドポイントは、セクション4.7定義されているように、リンクヘッダの "rel "属性でサポートされているWHIPプロトコル拡張を識別するためにURIを利用します。
+
+このセクションでは、WHIP仕様と将来の拡張で使用するためのIETF URN Sub-namespaceを作成し、登録します
+
+6.3.1. 仕様テンプレート
+名前空間ID
+
+ネームスペースID「whip」が割り当てられた
+登録情報
+
+バージョン：
+日付¶。
+名前空間の宣言された登録者
+
+登録組織：インターネット技術
+指定された連絡先：指定された専門家がWHIPの公開メーリングリスト "wish@ietf.org "を監視する
+構文構造の宣言
+
+whip "名前空間IDを使用するすべてのURNの名前空間固有文字列（NSS）は、次の構造を 持たなければならない：urn:ietf:params:whip:{type}:{name}:{other}
+キーワードの意味は以下の通り
+
+タイプ：エンティティタイプ。この仕様では "ext "タイプのみを定義する
+name: URN 構文要件（[RFC8141]参照）に準拠し、WHIP プロトコル拡張の主要な名前空間を定義する必須の US-ASCII 文字列。値は業界名または組織名でもよい（MAY）
+その他：その他：URN構文要件（[RFC8141]参照）に準拠し、WHIPプロトコル拡張を一意に識別するために必要なサブ名前空間（コロンで区切られた名前空間でさらに分割してもよい）を定義する任意のUS-ASCII文字列
+関連付属書類
+
+識別子の一意性の考慮
+
+指定された連絡担当者は、一意性の確認と実施に責任を負うものとする
+識別子の永続考察
+
+一度割り当てられた名前は、別の目的のために再割り当てしてはならない（MUST NOT）
+サブネームスペース内の値の割り当てに提供されるルールは、値の意味が変化しないように構築されなければならない
+この登録メカニズムは、時間とともに意味が変わる可能性のある値の命名には適切ではない
+識別子の割り当て
+
+タイプ "ext "を持つ名前空間（例えば、"urn:ietf:params:whip:ext"）は、IETFが承認したWHIP仕様のために予約されている
+識別子解決の
+
+指定なし
+レキシカル・イコライバルのルール
+
+特別な考慮はない。[RFC8141]で規定されている字句の等価性に関する規則が適用される
+URN構文への適合性
+
+特別な配慮はない
+検証
+
+指定なし
+範囲
+
+グローバル
+6.4. WHIPプロトコル拡張URIの登録
+このセクションでは、新しい WHIP プロトコル拡張 URI を IANA の "WebRTC-HTTP ingestion protocol (WHIP) URIs" レジストリに登録するプロセスを定義します（セクション 6.3 参照）
+
+WHIPプロトコル拡張URIは、WHIPエンドポイントによってサポートされるWHIPプロトコル拡張をシグナリングする目的で、セクション4.7で定義されているように、Linkヘッダの "rel "属性の値として使用されます
+
+WHIPプロトコル拡張URIは、セクション6.3定義されている "ext "型を持つ。
+
+6.4.1. 登録手続き
+IETFは "wish@ietf.org "というメーリングリストを作成し、登録前のWHIPプロトコル拡張提案の公開討論に使用することができます。 メーリングリストの使用が強く推奨されます。 IESGはwish@ietf.orgメーリングリストを監視し、登録をレビューする指定された専門家[RFC8126]を任命しました
+
+WHIPプロトコル拡張に属する新しい "ext "型URI（名前空間 "urn:ietf:params:whip:ext "内）の登録は、指定されたエキスパートによってレビューされ、RFCで公開されなければならない（MUST）。 既存のプロパティを変更する新しい値のデータ型の登録には RFC が必須である。既存の RFC で文書化された WHIP プロトコル拡張を変更する WHIP プロトコル拡張 URI の登録にも RFC が必要です
+
+登録手続きは、以下のセクションで定義される完成した登録テンプレートが wish@ietf.org と iana@iana.org に送られることから始まる。 2週間以内に、指定された専門家がIANAと登録の提出者に、登録が承認された か、軽微な変更で承認されたのか、あるいは理由付きで却下されたのかを通知する予定 である。 登録が理由付きで却下された場合、理由に列挙された懸念事項に対処すれば、再提 出することができる
+
+指定された専門家による決定は、IESG応用分野ディレクターに、そしてIESGに上訴することができる。これらはIESGの決定に対する通常の上訴手続きに従う
+
+登録手順が正常に終了すると、IANAはWHIPプロトコル拡張レジストリの対応するレコードを作成または変更します。 完了した登録テンプレートは破棄されます
+
+1つ以上の新しいWHIPプロトコル拡張URIを指定するRFCは、完成した登録テンプレートを含まなければならない（ MUST ）。これらの完成したテンプレートは IANA Considerations セクションではなく、ドキュメント本文に記載されることを意図している。 RFC は定義されたすべての属性を含むべきである（SHOULD）
+
+6.4.2. WHIPプロトコル拡張登録テンプレート
+WHIPプロトコル拡張URIは、以下のテンプレートを完成させることで定義されます
+
+URI：WHIPプロトコル拡張のユニークなURI（例えば、"urn:ietf:params:whip:ext:example:server-sent-events"
+参照：公開されている仕様への正式な参照
+名前：WHIPプロトコル拡張の説明的な名前（例えば、"Sender Side events"
+説明：機能を説明する短いフレーズ。
+連絡先登録を行う組織または個人の連絡先
+7. 謝辞
+著者は、Lorenzo Miniero、Juliusz Chroboczek、Adam Roach、Nils Ohlmeier、Christer Holmberg、Cameron Elliott、Gustavo Garcia、Jonas Birme、およびWebRTCコミュニティで、このドキュメントに対するコメント、フィードバック、テキスト、改善提案を提供し、仕様の初期実装に貢献してくれたすべての人に感謝したい
+
+8. 参考文献
+8.1. 規範となる参考文献
+[FETCH］
+WHATWG,"Fetch - Living Standard",n.d.,<https://fetch.spec.whatwg.org>.
+[RFC2119]。
+Bradner, S.,"Key words for use in RFC to Indicate Requirement Levels",BCP 14,RFC 2119,DOI 10.17487/RFC2119,March 1997,<https://www.rfc-editor.org/rfc/rfc2119>.
+[RFC3264]。
+Rosenberg, J.andH. Schulzrinne,"An Offer/Answer Model with Session Description Protocol (SDP)",RFC 3264,DOI 10.17487/RFC3264,June 2002,<https://www.rfc-editor.org/rfc/rfc3264>.
+[RFC3553]。
+Mealling, M.,Masinter, L.,Hardie, T., andG. Klyne,"An IETF URN Sub-namespace for Registered Protocol Parameters",BCP 73,RFC 3553,DOI 10.17487/RFC3553,June 2003,<https://www.rfc-editor.org/rfc/rfc3553>.
+[RFC6750]。
+Jones, M.andD. Hardt,"The OAuth 2.0 Authorisation Framework：Bearer Token Usage",RFC 6750,DOI 10.17487/RFC6750,October 2012,<https://www.rfc-editor.org/rfc/rfc6750>.
+[RFC7064]。
+Nandakumar, S.,Salgueiro, G ., Jones, P., andM. Petit-Huguenin,"URI Scheme for the Session Traversal Utilities for NAT (STUN) Protocol",RFC 7064,DOI 10.17487/RFC7064,November 2013,<https://www.rfc-editor.org/rfc/rfc7064>.
+[RFC7065]。
+Petit-Huguenin, M.,Nandakumar, S.,Salgueiro, G., andP. Jones,"Traversal Using Relays around NAT (TURN) Uniform Resource Identifiers",RFC 7065,DOI 10.17487/RFC7065,November 2013,<https://www.rfc-editor.org/rfc/rfc7065>.
+[RFC7675]。
+Perumal, M.,Wing, D.,Ravindranath, R.,Reddy, T., andM. Thomson,"Session Traversal Utilities for NAT (STUN) Usage for Consent Freshness",RFC 7675,DOI 10.17487/RFC7675,October 2015,<https://www.rfc-editor.org/rfc/rfc7675>.
+[RFC8174]。
+Leiba, B.,"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words",BCP 14,RFC 8174,DOI 10.17487/RFC8174,May 2017,<https://www.rfc-editor.org/rfc/rfc8174>.
+[RFC8288]。
+Nottingham, M.,"Web Linking",RFC 8288,DOI 10.17487/RFC8288,October 2017,<https://www.rfc-editor.org/rfc/rfc8288>.
+[RFC8489]。
+Petit-Huguenin, M.,Salgueiro, G.,Rosenberg, J.,Wing, D.,Mahy, R., andP. Matthews,"Session Traversal Utilities for NAT (STUN)",RFC 8489,DOI 10.17487/RFC8489,February 2020,<https://www.rfc-editor.org/rfc/rfc8489>.
+[RFC8725]。
+Sheffer, Y.,Hardt, D., andM. Jones,"JSON Web Token Best Current Practices",BCP 225,RFC 8725,DOI 10.17487/RFC8725,February 2020,<https://www.rfc-editor.org/rfc/rfc8725>.
+[RFC8829]。
+Uberti, J.,Jennings, C., andE. Rescorla, Ed.,"JavaScript Session Establishment Protocol (JSEP)",RFC 8829,DOI 10.17487/RFC8829,January 2021,<https://www.rfc-editor.org/rfc/rfc8829>.
+[RFC8838]。
+Ivov, E.,Uberti, J., andP. Saint-Andre,"Trickle ICE：Interactive Connectivity Establishment (ICE) Protocolの候補のインクリメンタルな提供",RFC 8838,DOI 10.17487/RFC8838,January 2021,<https://www.rfc-editor.org/rfc/rfc8838>.
+[RFC8840]。
+Ivov, E.,Stach, T.,Marocco, E., andC. Holmberg,"A Session Initiation Protocol (SIP) Usage for Incremental Provisioning of Candidates for the Interactive Connectivity Establishment (Trickle ICE)",RFC 8840,DOI 10.17487/RFC8840,January 2021,<https://www.rfc-editor.org/rfc/rfc8840>.
+[RFC8842]。
+Holmberg, C.andR. Shpount,"Session Description Protocol (SDP) Offer/Answer Considerations for Datagram Transport Layer Security (DTLS) and Transport Layer Security (TLS)",RFC 8842,DOI 10.17487/RFC8842,January 2021,<https://www.rfc-editor.org/rfc/rfc8842>.
+[RFC8853]
+Burman, B., Westerlund, M., Nandakumar, S., and M. Zanaty, "Using Simulcast in Session Description Protocol (SDP) and RTP Sessions", RFC 8853, DOI 10.17487/RFC8853, January 2021, <https://www.rfc-editor.org/rfc/rfc8853>.
+[RFC8858]
+Holmberg, C., "Indicating Exclusive Support of RTP and RTP Control Protocol (RTCP) Multiplexing Using the Session Description Protocol (SDP)", RFC 8858, DOI 10.17487/RFC8858, January 2021, <https://www.rfc-editor.org/rfc/rfc8858>.
+[RFC8863]
+Holmberg, C. and J. Uberti, "Interactive Connectivity Establishment Patiently Awaiting Connectivity (ICE PAC)", RFC 8863, DOI 10.17487/RFC8863, January 2021, <https://www.rfc-editor.org/rfc/rfc8863>.
+[RFC9110]
+Fielding, R., Ed., Nottingham, M., Ed., and J. Reschke, Ed., "HTTP Semantics", STD 97, RFC 9110, DOI 10.17487/RFC9110, June 2022, <https://www.rfc-editor.org/rfc/rfc9110>.
+[RFC9143]
+Holmberg, C., Alvestrand, H., and C. Jennings, "Negotiating Media Multiplexing Using the Session Description Protocol (SDP)", RFC 9143, DOI 10.17487/RFC9143, February 2022, <https://www.rfc-editor.org/rfc/rfc9143>.
+[W3C.REC-ldp-20150226]
+Malhotra, A., Ed., Arwe, J., Ed., and S. Speicher, Ed., "Linked Data Platform 1.0", W3C REC REC-ldp-20150226, W3C REC-ldp-20150226, 26 February 2015, <https://www.w3.org/TR/2015/REC-ldp-20150226/>.
+8.2. Informative References
+[I-D.draft-ietf-rtcweb-gateways]
+Alvestrand, H. T. and U. Rauschenbach, "WebRTC Gateways", Work in Progress, Internet-Draft, draft-ietf-rtcweb-gateways-02, 21 January 2016, <https://datatracker.ietf.org/doc/html/draft-ietf-rtcweb-gateways-02>.
+[RFC3261]
+Rosenberg, J., Schulzrinne, H., Camarillo, G., Johnston, A., Peterson, J., Sparks, R., Handley, M., and E. Schooler, "SIP: Session Initiation Protocol", RFC 3261, DOI 10.17487/RFC3261, June 2002, <https://www.rfc-editor.org/rfc/rfc3261>.
+[RFC6120]
+Saint-Andre, P., "Extensible Messaging and Presence Protocol (XMPP): Core", RFC 6120, DOI 10.17487/RFC6120, March 2011, <https://www.rfc-editor.org/rfc/rfc6120>.
+[RFC7826]
+Schulzrinne, H., Rao, A., Lanphier, R., Westerlund, M., and M. Stiemerling, Ed., "Real-Time Streaming Protocol Version 2.0", RFC 7826, DOI 10.17487/RFC7826, December 2016, <https://www.rfc-editor.org/rfc/rfc7826>.
+[RFC8126]
+Cotton, M., Leiba, B., and T. Narten, "Guidelines for Writing an IANA Considerations Section in RFCs", BCP 26, RFC 8126, DOI 10.17487/RFC8126, June 2017, <https://www.rfc-editor.org/rfc/rfc8126>.
+[RFC8141]
+Saint-Andre, P. and J. Klensin, "Uniform Resource Names (URNs)", RFC 8141, DOI 10.17487/RFC8141, April 2017, <https://www.rfc-editor.org/rfc/rfc8141>.
+[W3C.REC-webrtc-20210126]
+Jennings, C., Ed., Boström, H., Ed., and J. Bruaroey, Ed., "WebRTC 1.0: Real-Time Communication Between Browsers", W3C REC REC-webrtc-20210126, W3C REC-webrtc-20210126, 26 January 2021, <https://www.w3.org/TR/2021/REC-webrtc-20210126/>.
+Authors' Addresses
+Sergio Garcia Murillo
+Millicast
+Email: sergio.garcia.murillo@cosmosoftware.io
+Alexandre Gouaillard
+CoSMo Software
+Email: alex.gouaillard@cosmosoftware.io
